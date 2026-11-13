@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Ayarsiz harita: calistirinca harita oyunda belirir. Pencere yok, ayar yok.
+    Butun kod MapView ve MapScan ile ortak; burada sadece onlari birbirine baglayan
+    kucuk bir denetleyici var. MapView gelistirme ve ayar araci olarak kaliyor.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AssemblyName>BunuYazanTosun</AssemblyName>
+    <RootNamespace>Poe2Map</RootNamespace>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+
+    <!-- Debug derlemesinde bile iyilestirici acik: varsayilan Debug'ta JIT iyilestiricisi kapali ve her yontem
+         optimizasyonsuz derleniyor; saniyede 60 kez calisan okuma/cizim dongusu ile harita uretimi bundan yavasliyordu. -->
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\MapScan\Native.cs" Link="Shared\Native.cs" />
+    <Compile Include="..\MapScan\GameLayout.cs" Link="Shared\GameLayout.cs" />
+    <Compile Include="..\MapScan\MemoryRegions.cs" Link="Shared\MemoryRegions.cs" />
+    <Compile Include="..\MapScan\AreaHolder.cs" Link="Shared\AreaHolder.cs" />
+    <Compile Include="..\MapScan\AreaIdentity.cs" Link="Shared\AreaIdentity.cs" />
+    <Compile Include="..\MapScan\ExitNames.cs" Link="Shared\ExitNames.cs" />
+    <Compile Include="..\MapScan\PlayerChain.cs" Link="Shared\PlayerChain.cs" />
+    <Compile Include="..\MapScan\TerrainFinder.cs" Link="Shared\TerrainFinder.cs" />
+    <Compile Include="..\MapScan\LiveArea.cs" Link="Shared\LiveArea.cs" />
+    <Compile Include="..\MapScan\PlayerFinder.cs" Link="Shared\PlayerFinder.cs" />
+    <Compile Include="..\MapScan\LivePosition.cs" Link="Shared\LivePosition.cs" />
+    <Compile Include="..\MapScan\Pin.cs" Link="Shared\Pin.cs" />
+    <Compile Include="..\MapScan\CamHunt.cs" Link="Shared\CamHunt.cs" />
+    <Compile Include="..\MapScan\UiFinder.cs" Link="Shared\UiFinder.cs" />
+    <Compile Include="..\MapView\OverlayForm.cs" Link="Shared\OverlayForm.cs" />
+    <Compile Include="..\MapView\OverlayForm.Monsters.cs" Link="Shared\OverlayForm.Monsters.cs" />
+    <Compile Include="..\MapView\OverlayForm.Paths.cs" Link="Shared\OverlayForm.Paths.cs" />
+    <Compile Include="..\MapView\OverlayForm.Icons.cs" Link="Shared\OverlayForm.Icons.cs" />
+    <Compile Include="..\MapScan\MapIconReader.cs" Link="Shared\MapIconReader.cs" />
+    <Compile Include="..\MapView\OverlayForm.Altars.cs" Link="Shared\OverlayForm.Altars.cs" />
+    <Compile Include="..\MapScan\AltarLabels.cs" Link="Shared\AltarLabels.cs" />
+    <Compile Include="..\MapScan\FateLabels.cs" Link="Shared\FateLabels.cs" />
+    <Compile Include="..\MapView\OverlayForm.Fates.cs" Link="Shared\OverlayForm.Fates.cs" />
+    <Compile Include="..\MapView\OverlayForm.Wildwood.cs" Link="Shared\OverlayForm.Wildwood.cs" />
+    <Compile Include="..\MapScan\WildwoodReader.cs" Link="Shared\WildwoodReader.cs" />
+    <Compile Include="..\MapView\FrameStats.cs" Link="Shared\FrameStats.cs" />
+    <Compile Include="..\MapView\OverlayForm.Frame.cs" Link="Shared\OverlayForm.Frame.cs" />
+    <Compile Include="..\MapScan\ExitFinder.cs" Link="Shared\ExitFinder.cs" />
+    <Compile Include="..\MapScan\FlowField.cs" Link="Shared\FlowField.cs" />
+    <Compile Include="..\MapScan\TileReader.cs" Link="Shared\TileReader.cs" />
+    <Compile Include="..\MapScan\TileExits.cs" Link="Shared\TileExits.cs" />
+    <Compile Include="..\MapScan\IconCategories.cs" Link="Shared\IconCategories.cs" />
+    <Compile Include="..\MapScan\IconCatalogFile.cs" Link="Shared\IconCatalogFile.cs" />
+    <Compile Include="..\MapScan\IconTable.cs" Link="Shared\IconTable.cs" />
+    <Compile Include="..\MapScan\AppPaths.cs" Link="Shared\AppPaths.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Radar'in onemli karo listesi: cikislarin kesin yeri ve gittigi yerin adi. -->
+    <None Include="..\data\important_tgt_files.txt" Link="important_tgt_files.txt" Condition="Exists('..\data\important_tgt_files.txt')" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\data\radar-targets.json" Link="data\radar-targets.json" Condition="Exists('..\data\radar-targets.json')" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Ayar penceresinin Icons sekmesi: ucuncu taraf simge verisi, isteye bagli (data/README.md). -->
+    <None Include="..\data\icons\catalog.txt" Link="data\icons\catalog.txt" Condition="Exists('..\data\icons\catalog.txt')" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\data\icons\Icons.png" Link="data\icons\Icons.png" Condition="Exists('..\data\icons\Icons.png')" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="..\MapScan\EntityReader.cs" Link="Shared\EntityReader.cs" />
+    <Compile Include="..\MapScan\LocalPlayer.cs" Link="Shared\LocalPlayer.cs" />
+    <Compile Include="..\MapView\Player.cs" Link="Shared\Player.cs" />
+    <Compile Include="..\MapView\CrashLog.cs" Link="Shared\CrashLog.cs" />
+  </ItemGroup>
+
+</Project>

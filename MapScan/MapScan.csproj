@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AssemblyName>MapScan</AssemblyName>
+    <RootNamespace>Poe2Map</RootNamespace>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\data\important_tgt_files.txt" Link="important_tgt_files.txt" Condition="Exists('..\data\important_tgt_files.txt')" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\data\radar-targets.json" Link="data\radar-targets.json" Condition="Exists('..\data\radar-targets.json')" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
