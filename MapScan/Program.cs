@@ -79,6 +79,7 @@ internal static class Program
                 "uitext" => UiTextProbe.Run(args.Skip(1).ToArray()),
                 "fates" => FatesCommand.Run(args.Skip(1).ToArray()),
                 "icontable" => IconTableCommand.Run(args.Skip(1).ToArray()),
+                "firstscan" => FirstScan.Cli(),
                 "paths" => EntityPathsCommand.Run(args.Skip(1).ToArray()),
                 "entityrefs" => EntityRefsCommand.Run(args.Skip(1).ToArray()),
                 "buffs" => BuffProbe.Run(args.Skip(1).ToArray()),

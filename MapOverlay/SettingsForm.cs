@@ -40,6 +40,11 @@ internal sealed class SettingsForm : Form
         var fates = new TabPage("Fates") { UseVisualStyleBackColor = true };
         fates.Controls.Add(new FatePanel(this.settings, this.apply) { Dock = DockStyle.Fill });
         tabs.TabPages.Add(fates);
+
+        // Cikis yollari (PathPanel.cs): gorulen cikislardan hangilerinin yolu cizilsin.
+        var paths = new TabPage("Paths") { UseVisualStyleBackColor = true };
+        paths.Controls.Add(new PathPanel(this.settings, this.apply) { Dock = DockStyle.Fill });
+        tabs.TabPages.Add(paths);
         this.Controls.Add(tabs);
 
         this.ClientSize = new Size(500, 560);

@@ -85,6 +85,9 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.overlay.Show();
         this.FetchIconsIfMissing();
 
+        // Oyunda gorulen cikis adlari ayar listesine (Paths sekmesi); arka plandan geliyor, arayuz is parcacigina aktar.
+        this.overlay.ExitNamesSeen = names => this.Post(() => this.NoteExitNames(names));
+
         // Overlay penceresi kapanirsa (oturum kapanisi) normal cikis olsun: tepsi simgesi kalmasin.
         this.overlay.FormClosed += (_, _) =>
         {
@@ -125,6 +128,7 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.overlay.SetAltarHighlight(
             this.settings.AltarPlayer, this.settings.AltarPhrases, this.settings.AltarPlayerColor, this.settings.AltarTextColor);
         this.overlay.SetFateLabels(this.settings.FateRewards, this.settings.FatePhrases, this.settings.FateTextColor);
+        this.overlay.SetHiddenPaths(this.settings.HiddenPaths);
         this.overlay.SetWildwood(this.settings.Wildwood);
 
         RegisterKey(this.toggleKey, this.settings.ToggleKey, "acma/kapama tusu");
@@ -220,6 +224,9 @@ internal sealed partial class OverlayContext : ApplicationContext
         // Kapatirken paneli kendimiz kapatiyoruz ki ayarlar diske yazilsin: mesaj
         // dongusu bitince FormClosed artik calismiyor.
         if (this.settingsForm is { IsDisposed: false }) { this.settingsForm.Close(); }
+
+        // Ayar penceresi hic acilmadiysa da gorulen cikis adlari kaybolmasin.
+        this.settings.Save();
 
         this.tray.Visible = false;
         this.tray.Dispose();
@@ -374,10 +381,22 @@ internal sealed partial class OverlayContext : ApplicationContext
                 //    saniye yeniden deniyoruz. Denenecek bir sey yoksa (ilk acilis) hemen tarama.
                 var found = this.FastLocate(h);
 
-                // 2. Yedek: butun bellegi tara (ilk acilis ya da taramasiz yol tutmadiysa).
+                // 2. Yedek: butun bellegi tara (ilk acilis ya da taramasiz yol tutmadiysa). Harita ogesi de lazimsa
+                //    (ilk acilis) ikisi tek taramada (FirstScan): 14.11.2026 olcum 7.5 sn -> 4.0 sn.
                 if (found is null)
                 {
-                    var terrains = TerrainFinder.Find(h, null);
+                    List<TerrainFinder.Terrain> terrains;
+                    if (needElement)
+                    {
+                        var scan = FirstScan.Run(h, m => CrashLog.Write(m, null));
+                        terrains = scan.Terrains;
+                        element = scan.Element;
+                    }
+                    else
+                    {
+                        terrains = TerrainFinder.Find(h, null);
+                    }
+
                     lock (this.knownAreas)
                     {
                         foreach (var t in terrains) { AddKnown(this.knownAreas, t.StructAddress - GameLayout.TerrainInArea); }
@@ -405,7 +424,7 @@ internal sealed partial class OverlayContext : ApplicationContext
 
                 if (area is { } a) { raw = ReadTerrain(h, a); }
 
-                if (raw is not null && needElement)
+                if (raw is not null && needElement && element is null)
                 {
                     element = UiFinder.FindLargeMap(h, null, requireVisible: false);
                 }

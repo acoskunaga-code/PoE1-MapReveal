@@ -37,6 +37,7 @@
     <Compile Include="..\MapScan\Pin.cs" Link="Shared\Pin.cs" />
     <Compile Include="..\MapScan\CamHunt.cs" Link="Shared\CamHunt.cs" />
     <Compile Include="..\MapScan\UiFinder.cs" Link="Shared\UiFinder.cs" />
+    <Compile Include="..\MapScan\FirstScan.cs" Link="Shared\FirstScan.cs" />
     <Compile Include="..\MapView\OverlayForm.cs" Link="Shared\OverlayForm.cs" />
     <Compile Include="..\MapView\OverlayForm.Monsters.cs" Link="Shared\OverlayForm.Monsters.cs" />
     <Compile Include="..\MapView\OverlayForm.Paths.cs" Link="Shared\OverlayForm.Paths.cs" />

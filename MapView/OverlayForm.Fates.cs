@@ -186,39 +186,36 @@ internal sealed partial class OverlayForm
         // onu kapatiyordu). O kartin kutusu o sirada cizilmiyor.
         var mouse = GetCursorPos(out var screenMouse) ? this.PointToClient(screenMouse) : new Point(-1, -1);
 
-        var placed = new List<(FateLabels.Card Card, float X, float Y, float Width, bool Hovered)>(cards.Length);
+        var placed = new List<(FateLabels.Card Card, RectangleF Rect, bool Hovered)>(cards.Length);
         foreach (var card in cards)
         {
-            if (card.Rewards.Count == 0) { continue; }
-            if (UiFinder.Reread(h, card.Body) is not { } el) { continue; }
-            if (UiFinder.ElementPosition(h, card.Body, width, height) is not { } at) { continue; }
-
-            var (sx, sy) = UiFinder.ScaleValue(el.ScaleIndex, el.LocalScale, width, height, 0);
-            var cardWidth = el.SizeX * sx;
-            var hovered = new RectangleF(at.X, at.Y, cardWidth, el.SizeY * sy).Contains(mouse);
-            if (cardWidth >= 20) { placed.Add((card, at.X, at.Y, cardWidth, hovered)); }
+            if (card.Rewards.Count == 0 || this.CardRect(h, card, width, height) is not { } rect) { continue; }
+            if (rect.Width >= 20) { placed.Add((card, rect, rect.Contains(mouse))); }
         }
 
-        if (placed.Count == 0) { return; }
+        // Fare bir kartin ustundeyken oyunun kart aciklamasi ekranin ust kismina, butun kartlarin uzerine genis aciliyor
+        // (14.11.2026 goruntusu: "Rotted" aciklamasi diger iki kartin kutularinin altinda kaldi). O sirada hic kutu yok.
+        if (placed.Count == 0 || placed.Any(p => p.Hovered)) { return; }
 
-        var boxWidth = placed.Min(p => p.Width);
-        var centers = placed.Select(p => p.X + (p.Width / 2f)).OrderBy(x => x).ToList();
-        for (var i = 1; i < centers.Count; i++) { boxWidth = Math.Min(boxWidth, centers[i] - centers[i - 1]); }
-
-        boxWidth = Math.Max(boxWidth - 8f, 100f);
         e.Graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-        foreach (var (card, x, y, cardWidth, hovered) in placed)
+        var cardRects = placed.Select(p => p.Rect).ToList();
+        var boxes = new List<RectangleF>();
+        foreach (var (card, rect, hovered) in placed)
         {
             if (hovered) { continue; }
 
-            // Her odul ayri olculup ayri fircayla yaziliyor: aranan yazilardan biri gecen odul ayar rengiyle.
+            // Kutu genisligi AYNI SIRADAKI kartlara gore (ust uste iki sira kart olabiliyor: secim kartlari ve alttaki
+            // toplanmis Fate'ler); butun kartlara gore olcunce iki siranin yakin merkezleri kutuyu daraltiyordu.
+            var boxWidth = RowPitch(placed.Select(p => p.Rect), rect);
+
+            // Her odul ayri olculup ayri fircayla yaziliyor (aranan yazi gecen odul ayar rengiyle); oduller arasi bosluk.
             var lines = card.Rewards
                 .Select(r => (Text: "• " + r.Replace("\n", "\n   "), Match: this.FateMatches(r)))
-                .Select(l => (l.Text, l.Match, l.Text.Length == 0 ? 0f : e.Graphics.MeasureString(l.Text, font, (int)(boxWidth - 10)).Height))
+                .Select(l => (l.Text, l.Match, Height: e.Graphics.MeasureString(l.Text, font, (int)(boxWidth - 10)).Height))
                 .ToList();
-            var textHeight = lines.Sum(l => l.Item3);
-            var box = new RectangleF(x + (cardWidth / 2f) - (boxWidth / 2f), y - textHeight - 14, boxWidth, textHeight + 10);
-            if (box.Top < 0) { box.Y = 0; }
+            var textHeight = lines.Sum(l => l.Height) + (Math.Max(0, lines.Count - 1) * RewardGap);
+            var box = this.PlaceFateBox(rect, boxWidth, textHeight + 10, cardRects, boxes, height);
+            boxes.Add(box);
 
             e.Graphics.FillRectangle(FateBack, box);
             e.Graphics.DrawRectangle(FateEdge, box.X, box.Y, box.Width, box.Height);
@@ -227,7 +224,7 @@ internal sealed partial class OverlayForm
             foreach (var (text, match, lineHeight) in lines)
             {
                 e.Graphics.DrawString(text, font, match ? this.fateMatchText : FateText, new RectangleF(box.X + 5, top, box.Width - 10, lineHeight + 2));
-                top += lineHeight;
+                top += lineHeight + RewardGap;
             }
 
             // Aranan yazilardan biri gecen kartin kutusu kalin cerceve (altarlardaki gibi), disinda ince koyu kenar.
@@ -241,4 +238,67 @@ internal sealed partial class OverlayForm
             }
         }
     }
+
+    private const float RewardGap = 4f;
+
+    /// <summary>
+    ///     Kartin sirasindaki (ust kenari 30 px icinde) kartlarla: kart genisligi ile en yakin iki merkez arasinin kucugu,
+    ///     8 px bosluk birakarak; en az 100 px.
+    /// </summary>
+    private static float RowPitch(IEnumerable<RectangleF> cards, RectangleF card)
+    {
+        var row = cards.Where(c => Math.Abs(c.Y - card.Y) < 30).Select(c => c.X + (c.Width / 2f)).OrderBy(x => x).ToList();
+        var pitch = card.Width;
+        for (var i = 1; i < row.Count; i++) { pitch = Math.Min(pitch, row[i] - row[i - 1]); }
+
+        return Math.Max(pitch - 8f, 100f);
+    }
+
+    /// <summary>Kartin ekrandaki tam kutusu: govde, ad seridi ve odul simgeleri ogelerinin birlesimi (FateLabels.Card.Parts).</summary>
+    private RectangleF? CardRect(IntPtr h, FateLabels.Card card, int width, int height)
+    {
+        RectangleF? all = null;
+        foreach (var part in card.Parts)
+        {
+            if (UiFinder.Reread(h, part) is not { } el || UiFinder.ElementPosition(h, part, width, height) is not { } at) { continue; }
+
+            var (sx, sy) = UiFinder.ScaleValue(el.ScaleIndex, el.LocalScale, width, height, 0);
+            var rect = new RectangleF(at.X, at.Y, el.SizeX * sx, el.SizeY * sy);
+            if (rect.Width <= 0 || rect.Height <= 0) { continue; }
+
+            all = all is { } a ? RectangleF.Union(a, rect) : rect;
+        }
+
+        return all;
+    }
+
+    /// <summary>
+    ///     Kutunun yeri, sirayla ilk uyan: kartin ustu, alti, sagi, solu. "Uyan" = baska bir karta ya da daha once konan bir
+    ///     kutuya binmiyor ve ekranin icinde. 14.11.2026: dort kartli panelde alttaki kartin ustu ortadaki kartin
+    ///     simgelerine biniyordu, alti ekrandan tasiyordu; yanlari bostu. Hicbiri uymazsa ust, ekranin ustune sigdirilarak.
+    /// </summary>
+    private RectangleF PlaceFateBox(RectangleF card, float boxWidth, float boxHeight, List<RectangleF> cards, List<RectangleF> boxes, int screenHeight)
+    {
+        var x = card.X + (card.Width / 2f) - (boxWidth / 2f);
+        var screen = new RectangleF(0, 0, this.ClientSize.Width, screenHeight);
+        var options = new[]
+        {
+            new RectangleF(x, card.Y - boxHeight - 4, boxWidth, boxHeight),
+            new RectangleF(x, card.Bottom + 4, boxWidth, boxHeight),
+            new RectangleF(card.Right + 4, card.Y, boxWidth, boxHeight),
+            new RectangleF(card.X - boxWidth - 4, card.Y, boxWidth, boxHeight),
+        };
+
+        foreach (var option in options)
+        {
+            if (screen.Contains(option) && !Collides(option, card, cards, boxes)) { return option; }
+        }
+
+        var above = options[0];
+        if (above.Top < 0) { above.Y = 0; }
+        return above;
+    }
+
+    private static bool Collides(RectangleF box, RectangleF own, List<RectangleF> cards, List<RectangleF> boxes) =>
+        cards.Any(c => c != own && c.IntersectsWith(box)) || boxes.Any(b => b.IntersectsWith(box));
 }

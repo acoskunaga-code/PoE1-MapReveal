@@ -40,10 +40,22 @@ internal static class FatesCommand
             var cards = FateLabels.Scan(h, panel, all) ?? new List<FateLabels.Card>();
             if (cards.Count == 0) { Console.WriteLine("acik kart yok (panel kapali)"); }
 
+            // Ekrandaki yerler (overlay'in kutu yerlesimi bunlarla): istemci boyutu oyun penceresinden.
+            GetClientRect(game.MainWindowHandle, out var rc);
+            var (cw, ch) = (rc.Right - rc.Left, rc.Bottom - rc.Top);
             foreach (var card in cards)
             {
                 Console.WriteLine($"{card.Name}  (govde {card.Body:X})");
                 foreach (var reward in card.Rewards) { Console.WriteLine("    - " + reward.Replace("\n", " / ")); }
+                foreach (var part in card.Parts)
+                {
+                    var at = UiFinder.ElementPosition(h, part, cw, ch);
+                    var el = UiFinder.Reread(h, part);
+                    var size = el is { } u ? UiFinder.ScaleValue(u.ScaleIndex, u.LocalScale, cw, ch, 0) : (W: 0f, H: 0f);
+                    Console.WriteLine($"    oge {part:X}: " + (at is { } p && el is { } e
+                        ? $"({p.X:F0},{p.Y:F0}) {e.SizeX * size.W:F0}x{e.SizeY * size.H:F0} {(e.Visible ? "gorunur" : "gizli")}"
+                        : "yer yok"));
+                }
             }
 
             return 0;
@@ -52,5 +64,14 @@ internal static class FatesCommand
         {
             Native.CloseHandle(h);
         }
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool GetClientRect(IntPtr hWnd, out Rect rect);
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct Rect
+    {
+        public int Left, Top, Right, Bottom;
     }
 }

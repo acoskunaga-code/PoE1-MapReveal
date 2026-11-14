@@ -18,13 +18,13 @@
 
 - 🗺️ **Whole map on entry** — the explored *and* unexplored layout, lined up with the game's own large map as you zoom and pan.
 - 👹 **Monsters by rarity** — 🔴 normal · 🔵 magic · 🟡 rare · 🟤 unique. Each rarity can be switched off or resized.
-- 🚪 **Exit paths** — a coloured route from you to every exit, labelled with where it leads.
+- 🚪 **Exit paths** — a coloured route from you to every exit, labelled with where it leads. Pick which exits get a route (Settings → Paths).
 - 📍 **Map icons** — shrines, strongboxes, essences, NPCs and more, with their names. Opened strongboxes and taken shrines disappear. Size per icon, searchable list.
 - 🔮 **Eldritch altars** — every "Player gains" choice framed, plus a gold frame for any text you type (e.g. *Divine Orb*). Colours are yours to pick.
 - 🪶 **Fates (Covens)** — the moment the "Select a Fate" panel opens, each card shows what its small round reward icons say, written above the card. No need to hover them one by one. Rewards that contain a word you type (e.g. *Rare Rings*) are coloured and their card's box is framed.
 - 🌿 **The Viridian Wildwood** — wisps by colour and size, fuel orbs, altars and Nameless Shrines.
 - ⌨️ **Hotkeys** — one key hides the whole overlay (default **F9**), another hides only the exit paths (default **F10**). Both can be changed.
-- ⚡ **Quick** — a new zone is picked up in about 0.1–0.2 s.
+- ⚡ **Quick** — the first map appears about 4–5 s after starting, a new zone is picked up in about 0.1–0.2 s.
 - 🔒 **Read-only** — it only reads game memory. It does not modify the game, inject code or send input.
 
 ## 🚀 Quick start
@@ -33,7 +33,7 @@
 2. Start Path of Exile and enter an area.
 3. Run `BunuYazanTosun.exe` — a tray icon appears.
 4. Press **Tab** to open the large map. The overlay is drawn on top of it.
-5. Tray icon → **Settings** for line colour, monster icons, hotkeys (General), map icons (Icons), altar frames (Altars) and Fate rewards (Fates).
+5. Tray icon → **Settings** for line colour, monster icons, hotkeys (General), map icons (Icons), altar frames (Altars), Fate rewards (Fates) and exit paths (Paths).
 
 Everything it writes (settings, log, downloaded icons) stays in a `data` folder next to the exe — nothing in AppData, no registry, no installer. Delete the folder to reset. (If the exe sits in a write-protected folder such as Program Files, it falls back to `%LOCALAPPDATA%\poe1-map`.) Files of older versions are moved there on first start. The log is capped at about 2 MB.
 

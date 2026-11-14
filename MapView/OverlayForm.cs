@@ -779,16 +779,39 @@ internal sealed partial class OverlayForm : Form
         var belowGame = !flagMissing && this.gameWindow != IntPtr.Zero && IsBelow(this.Handle, this.gameWindow);
         if (!flagMissing && !belowGame) { return; }
 
-        SetWindowPos(this.Handle, HwndTopMost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpNoActivate);
+        var ok = SetWindowPos(this.Handle, HwndTopMost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpNoActivate);
+        var error = ok ? 0 : Marshal.GetLastWin32Error();
+        var stuck = this.IsTopMostNow;
         this.stats.TopMostRestored();
+
+        // 14.11.2026: iki acilista (13:27, 13:31) bit dakikalarca her kontrolde yine yoktu; overlay oyunun arkasinda kaldi,
+        // Fate kutulari gorunmedi. Ikisinde de bir gizle/goster (Alt+Tab) kalici olarak duzeltti. O yuzden bit ust uste
+        // birkac kontrolde yoksa ayni seyi kendimiz yapiyoruz (en fazla 10 sn'de bir).
+        this.topMostMisses = flagMissing ? this.topMostMisses + 1 : 0;
+        if (this.topMostMisses >= TopMostMissesBeforeCycle && this.Visible && now >= this.nextTopMostCycle)
+        {
+            this.topMostMisses = 0;
+            this.nextTopMostCycle = now + 10_000;
+            this.Visible = false;
+            SetWindowPos(this.Handle, HwndTopMost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpNoActivate);
+            this.Visible = true;
+            CrashLog.Write($"overlay en ustte kalmiyordu ({TopMostMissesBeforeCycle} kontrol ust uste), gizle-goster ile yenilendi: " +
+                           $"simdi bit {(this.IsTopMostNow ? "var" : "YOK")}", null);
+            return;
+        }
 
         if (now - this.lastTopMostLog < 1000) { return; }
         this.lastTopMostLog = now;
         var foreground = GetForegroundWindow();
         CrashLog.Write($"overlay {(flagMissing ? "en ustte degildi (TOPMOST biti yoktu)" : "oyunun altindaydi")}, duzeltildi: " +
                        $"onplan {(foreground == this.gameWindow ? "oyun" : OwnsWindow(foreground) ? "kendi pencere" : "baska pencere")}  " +
-                       $"panel {(this.PanelOpen ? "acik" : "kapali")}  gorunur {this.Visible}", null);
+                       $"panel {(this.PanelOpen ? "acik" : "kapali")}  gorunur {this.Visible}  " +
+                       $"SetWindowPos {(ok ? "tamam" : $"HATA {error}")}, hemen sonra bit {(stuck ? "var" : "yok")}", null);
     }
+
+    private const int TopMostMissesBeforeCycle = 4;
+    private int topMostMisses;
+    private long nextTopMostCycle;
 
     /// <summary>window, other'in altinda mi (z sirasinda yukari dogru yururken other bulunur)?</summary>
     private static bool IsBelow(IntPtr window, IntPtr other)

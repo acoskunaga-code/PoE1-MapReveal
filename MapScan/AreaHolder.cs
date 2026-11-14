@@ -30,6 +30,7 @@ internal static class AreaHolder
     private static readonly object Gate = new();
     private static readonly List<Holder> Live = new();
     private static List<Holder> pending = new();
+    private static ulong pendingArea;
     private static List<(int Slot, int Back)> recipes = new();
     private static bool loaded;
 
@@ -58,6 +59,32 @@ internal static class AreaHolder
         {
             var value = PlayerChain.ReadPointer(h, x.Object + (ulong)x.Back);
             if (PlayerChain.LooksLikePointer(value)) { votes[value] = votes.GetValueOrDefault(value) + 1; }
+        }
+
+        return votes.Count == 0 ? 0 : votes.OrderByDescending(v => v.Value).First().Key;
+    }
+
+    /// <summary>
+    ///     Henuz dogrulanmamis adaylarin gosterdigi YENI alan: adaylarin cikarildigi alandan farkli, en cok oyu alan isaretci;
+    ///     yoksa 0. Tarif henuz ogrenilmemisken (yeni kurulum, yamadan sonra) ILK alan degisiminin de taramasiz olmasi
+    ///     icin: eskiden bu degisim 8 sn bekleyip 4-5 sn tariyordu. Sonuc yalnizca aday; cagiran LocalPlayer.FromArea
+    ///     ile sinar (zemin + oyuncu), yanlis bir aday haritayi bozamaz.
+    /// </summary>
+    internal static ulong PendingCurrent(IntPtr h)
+    {
+        Holder[] candidates;
+        ulong from;
+        lock (Gate)
+        {
+            candidates = pending.ToArray();
+            from = pendingArea;
+        }
+
+        var votes = new Dictionary<ulong, int>();
+        foreach (var x in candidates)
+        {
+            var value = PlayerChain.ReadPointer(h, x.Object + (ulong)x.Back);
+            if (value != from && PlayerChain.LooksLikePointer(value)) { votes[value] = votes.GetValueOrDefault(value) + 1; }
         }
 
         return votes.Count == 0 ? 0 : votes.OrderByDescending(v => v.Value).First().Key;
@@ -111,6 +138,7 @@ internal static class AreaHolder
             if (Live.Count == 0)
             {
                 pending = Candidates(h, area);
+                pendingArea = area;
                 Log?.Invoke($"alan tutucu: {pending.Count} aday cikarildi, sonraki alan degisiminde sinanacak");
                 return;
             }

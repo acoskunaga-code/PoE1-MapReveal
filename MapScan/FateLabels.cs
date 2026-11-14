@@ -18,11 +18,12 @@ namespace Poe2Map;
 ///                                     simgeli Black Frost kartinda bir onceki kartin "Rare Wands" yazisi duruyordu);
 ///                                     o yuzden yalnizca kendi gorunur biti acik simgelerin yazisi aliniyor
 ///         yazi                        oge + AltarLabels.TextOffset (0x358), std::wstring
-///         govde -> 8, + 0x328         KARTIN ODUL OZETI, tek std::wstring: butun oduller alt alta, "Empowered Monster ..."
-///                                     ile baslayan satir yeni odul, digerleri onceki odulun devami; iki kopya isteyen
-///                                     odulde ilerleme ("1/2 ..."). Asil kaynak bu: simgelerin yazilari bayat kalabiliyor
-///                                     (00:58 dokumu: Wildfire ozeti tek odul, simgelerde iki yazi vardi). Ozet bossa
-///                                     gorunur simgelerin yazilari kullaniliyor.
+///         govde -> 8, + 0x328         KARTIN ODUL OZETI, tek std::wstring: butun oduller alt alta, iki kopya isteyen odulde
+///                                     ilerleme ("1/2 ..."). Satirlarin hangi odule ait oldugu ozetten guvenle cikmiyor
+///                                     (14.11.2026 Conjurer: "Sceptres dropped by ..." satiri "will drop additional Rare
+///                                     Sceptres" satirindan ONCE geliyordu, bolme ucu ayri odul yapti). O yuzden asil kaynak
+///                                     GORUNUR simgelerin yazilari (simge basina bir odul, gruplama dogru); bayat yazi
+///                                     yalnizca gizli simgelerde goruldu. Gorunur simge yazisi yoksa ozet kullaniliyor.
 ///
 ///     Panel ilk kez tuy yardim yazisi aranarak bulunuyor (yazi -> yuva -> liste -> grup -> panel, dort ebeveyn yukari)
 ///     ve yolu kaydediliyor; sonraki acilislarda aramasiz. Yamadan sonra yol tutmazsa overlay kendisi yeniden arar.
@@ -42,8 +43,12 @@ internal static class FateLabels
     private static readonly Regex Progress = new(@"^[0-9]+/[0-9]+ ", RegexOptions.CultureInvariant);
     private static readonly Regex BlankLines = new(@"\n\s*\n+", RegexOptions.CultureInvariant);
 
-    /// <summary>Bir kart: govde ogesi (ekrandaki yeri icin), adi ve odul yazilari (simge sirasiyla).</summary>
-    internal sealed record Card(ulong Body, string Name, IReadOnlyList<string> Rewards);
+    /// <summary>
+    ///     Bir kart: govde ogesi, adi ve odul yazilari (simge sirasiyla). Ekrandaki yeri govde + ad seridi + odul simgeleri
+    ///     ogelerinin birlesimi (Parts): 14.11.2026, govdenin kutusu ad seridini ve simge sirasini kapsamiyordu, alttaki kartin
+    ///     kutusu ustteki kartin simgelerinin ustune oturdu.
+    /// </summary>
+    internal sealed record Card(ulong Body, string Name, IReadOnlyList<string> Rewards, IReadOnlyList<ulong> Parts);
 
     internal static string PathFile => AppPaths.File("fate-panel.txt");
 
@@ -141,28 +146,35 @@ internal static class FateLabels
         if (parts.Count <= BodyRewards) { return null; }
 
         var name = Clean(TextOf(h, parts[BodyName]));
-        var rewards = SplitSummary(TextOf(h, parts[BodyRewards], RowSummaryOffset));
-        if (rewards.Count > 0 && !all) { return name.Length > 0 ? new Card(body, name, rewards) : null; }
 
+        // Fate'ler secilip alininca panel bos cerceveyle acik kaliyor: kartlarin adi silinip govde gorunur kaliyor, odul
+        // simgeleri de eski yazilariyla gorunur (14.11.2026). Adi olmayan kart secilebilir kart degil.
+        if (name.Length == 0 && !all) { return null; }
+
+        var shownIcons = new List<string>();
+        var hiddenIcons = new List<string>();
         if (Read(h, parts[BodyRewards], buf) && AltarLabels.Children(h, buf) is [var row, ..] && Read(h, row, buf))
         {
             foreach (var icon in AltarLabels.Children(h, buf).Take(8))
             {
                 if (!Read(h, icon, buf) || AltarLabels.Children(h, buf) is not { Count: > RewardText } kids) { continue; }
 
-                var shown = UiFinder.Reread(h, icon) is { Visible: true };
-                if (!shown && !all) { continue; }
-
                 var text = Clean(TextOf(h, kids[RewardText]));
-                if (text.Length > 0) { rewards.Add(all ? (shown ? "[simge] " : "[gizli simge] ") + text : text); }
+                if (text.Length == 0) { continue; }
+
+                (UiFinder.Reread(h, icon) is { Visible: true } ? shownIcons : hiddenIcons).Add(text);
             }
         }
 
-        // Fate'ler secilip alininca panel bos cerceveyle acik kaliyor: kartlarin adi silinip govde gorunur kaliyor, odul
-        // simgeleri de eski yazilariyla gorunur (14.11.2026). Adi olmayan kart secilebilir kart degil.
-        if (name.Length == 0 && !all) { return null; }
+        var summary = SplitSummary(TextOf(h, parts[BodyRewards], RowSummaryOffset));
+        var shape = new[] { body, parts[BodyName], parts[BodyRewards] };
+        if (!all) { return new Card(body, name, shownIcons.Count > 0 ? shownIcons : summary, shape); }
 
-        return name.Length > 0 || rewards.Count > 0 ? new Card(body, name, rewards) : null;
+        var rewards = summary.Select(s => "[ozet] " + s)
+            .Concat(shownIcons.Select(s => "[simge] " + s))
+            .Concat(hiddenIcons.Select(s => "[gizli simge] " + s))
+            .ToList();
+        return name.Length > 0 || rewards.Count > 0 ? new Card(body, name, rewards, shape) : null;
     }
 
     /// <summary>Odul ozetini odullere boler: "Empowered Monster" (ya da "1/2 ...") ile baslayan satir yeni odul.</summary>

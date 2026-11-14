@@ -23,7 +23,7 @@ namespace Poe2Map;
 /// </summary>
 internal static class UiFinder
 {
-    private const int Span = 0x3A0;
+    internal const int Span = 0x3A0;
     private const int ReadBlock = 1 << 20;
 
     /// <summary>Oyunun UI olcegini hesapladigi taban cozunurluk (UISettings.xml).</summary>
@@ -83,6 +83,24 @@ internal static class UiFinder
             $"olcek[{this.ScaleIndex}]x{this.LocalScale:F3}  ebeveyn {this.ParentPtr:X}  " +
             (this.Visible ? "GORUNUR" : "gizli");
     }
+
+    /// <summary>Taramanin tek konum sinavi: oge kendi adresini +OffSelf'te tutuyor ve buyuk harita parmak izine uyuyor. FirstScan de kullaniyor.</summary>
+    internal static UiElement? CheckLargeMap(byte[] buf, int i, ulong here)
+    {
+        if (BitConverter.ToUInt64(buf, i + OffSelf) != here) { return null; }
+
+        var candidate = Parse(buf, i, here);
+        return LooksLikeLargeMap(candidate) ? candidate : null;
+    }
+
+    /// <summary>Adaylardan kullanilani: ebeveyni onu gosteren (IsInUse) once, sonra gorunur olan.</summary>
+    internal static UiElement? PickLargeMap(IntPtr handle, IEnumerable<UiElement> hits, bool requireVisible) =>
+        hits
+            .Where(e => !requireVisible || e.Visible)
+            .OrderByDescending(e => PlayerChain.ReadPointer(handle, e.ParentPtr + LargeMapSlotInParent) == e.Address)
+            .ThenByDescending(e => e.Visible)
+            .Select(e => (UiElement?)e)
+            .FirstOrDefault();
 
     private static UiElement Parse(byte[] buf, int i, ulong address) => new(
         address,
@@ -420,12 +438,7 @@ internal static class UiFinder
         log?.Invoke($"kendini +0x{OffSelf:X}'de gosteren {selfPointers} yapi, harita parmak izine uyan {hits.Count}, " +
                     $"{sw.Elapsed.TotalSeconds:F1} sn");
 
-        return hits
-            .Where(e => !requireVisible || e.Visible)
-            .OrderByDescending(e => PlayerChain.ReadPointer(handle, e.ParentPtr + LargeMapSlotInParent) == e.Address)
-            .ThenByDescending(e => e.Visible)
-            .Select(e => (UiElement?)e)
-            .FirstOrDefault();
+        return PickLargeMap(handle, hits, requireVisible);
     }
 
     internal static int Run()

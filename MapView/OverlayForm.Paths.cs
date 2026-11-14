@@ -196,7 +196,11 @@ internal sealed partial class OverlayForm
             }
 
             // Hesap surerken alan degistiyse sonucu yazma.
-            if (area == this.areaBase) { this.pathTargets = next.ToArray(); }
+            if (area == this.areaBase)
+            {
+                this.pathTargets = next.ToArray();
+                this.ReportExitNames(next);
+            }
         }
         catch (Exception ex)
         {
@@ -227,6 +231,27 @@ internal sealed partial class OverlayForm
     /// </summary>
     internal bool HidePaths;
 
+    // Ayar penceresinin Paths sekmesi: yolu cizilmeyecek cikis adlari. Butun olarak degistiriliyor (cizimle yarismasin).
+    private HashSet<string> hiddenPaths = new(StringComparer.OrdinalIgnoreCase);
+    private string reportedExitNames = "";
+
+    /// <summary>Gorulen cikis adlari (degisince, arka plan is parcacigindan): ayar listesine eklenmek uzere.</summary>
+    internal Action<IReadOnlyList<string>>? ExitNamesSeen;
+
+    /// <summary>Yolu cizilmeyecek cikis adlari; kapinin isareti ve adi yine ciziliyor.</summary>
+    internal void SetHiddenPaths(IEnumerable<string> names) =>
+        this.hiddenPaths = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
+
+    private void ReportExitNames(List<PathTarget> targets)
+    {
+        var names = targets.Select(t => t.Exit.Name).Where(n => n.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var key = string.Join("|", names);
+        if (key == this.reportedExitNames) { return; }
+
+        this.reportedExitNames = key;
+        this.ExitNamesSeen?.Invoke(names);
+    }
+
     /// <summary>Oyuncudan her cikisa yol, cikisin yerine bir isaret ve ad. PaintOverlay'den cagriliyor.</summary>
     private void PaintPaths(PaintEventArgs e, Matrix transform, PlayerPos player)
     {
@@ -239,11 +264,14 @@ internal sealed partial class OverlayForm
         var playerCell = ((int)(player.Y / PlayerPos.UnitsPerCell) / FlowField.Factor * 100000) +
                          ((int)(player.X / PlayerPos.UnitsPerCell) / FlowField.Factor);
 
+        var hidden = this.hiddenPaths;
         foreach (var target in targets)
         {
             var ex = (target.Exit.X - player.X) / PlayerPos.UnitsPerCell;
             var ey = (target.Exit.Y - player.Y) / PlayerPos.UnitsPerCell;
-            var reached = (ex * ex) + (ey * ey) < ReachedCells * ReachedCells;
+
+            // Paths sekmesinde kapatilan cikis: yol yok, isaret ve ad var (asagida).
+            var reached = (ex * ex) + (ey * ey) < ReachedCells * ReachedCells || hidden.Contains(target.Exit.Name);
 
             if (!reached)
             {

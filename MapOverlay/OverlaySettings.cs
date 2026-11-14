@@ -67,6 +67,9 @@ internal sealed partial class OverlaySettings
                     case AltarTextColorKey when ReadColor(value) is { } textColor:
                         settings.AltarTextColor = textColor;
                         break;
+                    case PathOnKey or PathOffKey:
+                        ReadPathLine(settings, key, value);
+                        break;
                     case FateRewardsKey or FateTextKey or FateTextColorKey:
                         ReadFateLine(settings, key, value);
                         break;
@@ -144,6 +147,7 @@ internal sealed partial class OverlaySettings
             this.WriteIconLines(lines);
             this.WriteAltarLines(lines);
             this.WriteFateLines(lines);
+            this.WritePathLines(lines);
             this.WriteKeyLines(lines);
 
             File.WriteAllLines(FilePath, lines);

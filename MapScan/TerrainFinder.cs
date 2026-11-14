@@ -31,7 +31,7 @@ internal static class TerrainFinder
     internal const float TileToWorld = 250f;
     internal const float WorldPerCell = TileToWorld / TileToGrid;
 
-    private const int StructSpan = 0x138;
+    internal const int StructSpan = 0x138;
     private const int ReadBlock = 1 << 20;
 
     /// <summary>
@@ -74,6 +74,13 @@ internal static class TerrainFinder
         }
 
         return Validate(handle, buf, 0, address);
+    }
+
+    /// <summary>Taramanin tek konum sinavi: ucuz on eleme (dosem X 1..4000), sonra tam sinav. FirstScan de kullaniyor.</summary>
+    internal static Terrain? Check(IntPtr handle, byte[] buf, int i, ulong address)
+    {
+        var tx = BitConverter.ToInt64(buf, i + 0x18);
+        return tx is < 1 or > 4000 ? null : Validate(handle, buf, i, address);
     }
 
     private static Terrain? Validate(IntPtr handle, byte[] buf, int i, ulong address)
