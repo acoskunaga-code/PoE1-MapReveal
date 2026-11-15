@@ -48,7 +48,22 @@ internal static class FateLabels
     ///     ogelerinin birlesimi (Parts): 14.11.2026, govdenin kutusu ad seridini ve simge sirasini kapsamiyordu, alttaki kartin
     ///     kutusu ustteki kartin simgelerinin ustune oturdu.
     /// </summary>
-    internal sealed record Card(ulong Body, string Name, IReadOnlyList<string> Rewards, IReadOnlyList<ulong> Parts);
+    /// <remarks>
+    ///     Group: panelde kart yuvasi olan kacinci grup (0 = ustteki secilen kartlar panel/5, 1 = eldeki kartlar panel/6).
+    ///     Eldeki sira, uste konmus kartlari da gorunur olarak tutmaya devam ediyor (15.11.2026): elin tamami.
+    /// </remarks>
+    internal sealed record Card(ulong Body, string Name, IReadOnlyList<string> Rewards, IReadOnlyList<ulong> Parts, int Group = 0);
+
+    /// <summary>Panel "Invoke Fates" paneli mi (kart secme degil, eldeki kartlari uste koyma); baslik ilk cocuklardan birinde.</summary>
+    internal static bool IsInvoke(IntPtr h, ulong panel)
+    {
+        var buf = new byte[TextOffset + 0x20];
+        return Read(h, panel, buf) &&
+               AltarLabels.Children(h, buf).Take(8).Any(c => TextOf(h, c).Equals("Invoke Fates", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Ustteki gruptaki gorunur yuva sayisi: en fazla kac kart konabilir (15.11.2026: 3). Bulunamazsa 0.</summary>
+    internal static int TopSlots(IntPtr h, ulong panel) => Slots(h, panel).Count(s => s.Group == 0 && UiFinder.ChainVisible(h, s.Slot));
 
     internal static string PathFile => AppPaths.File("fate-panel.txt");
 
@@ -98,9 +113,9 @@ internal static class FateLabels
         var cards = new List<Card>();
         if (!all && !UiFinder.ChainVisible(h, panel)) { return cards; }
 
-        foreach (var slot in Slots(h, panel))
+        foreach (var (slot, group) in Slots(h, panel))
         {
-            if (ReadCard(h, slot, all) is { } card) { cards.Add(card); }
+            if (ReadCard(h, slot, all) is { } card) { cards.Add(card with { Group = group }); }
         }
 
         return cards;
@@ -114,22 +129,25 @@ internal static class FateLabels
     }
 
     /// <summary>Panelin kart yuvalari: panel/grup/0/yuva, ikinci cocugu tuy yardim yazisi olanlar.</summary>
-    private static IEnumerable<ulong> Slots(IntPtr h, ulong panel)
+    private static IEnumerable<(ulong Slot, int Group)> Slots(IntPtr h, ulong panel)
     {
         var buf = new byte[TextOffset + 0x20];
         if (!Read(h, panel, buf)) { yield break; }
 
+        var ordinal = -1;
         foreach (var group in AltarLabels.Children(h, buf).Take(32))
         {
             if (!Read(h, group, buf) || AltarLabels.Children(h, buf) is not [var list, ..]) { continue; }
             if (!Read(h, list, buf)) { continue; }
 
+            var counted = false;
             foreach (var slot in AltarLabels.Children(h, buf).Take(8))
             {
                 if (Read(h, slot, buf) && AltarLabels.Children(h, buf) is [_, var help, ..] &&
                     TextOf(h, help).StartsWith(FeatherHelp, StringComparison.Ordinal))
                 {
-                    yield return slot;
+                    if (!counted) { counted = true; ordinal++; }
+                    yield return (slot, ordinal);
                 }
             }
         }
@@ -195,13 +213,13 @@ internal static class FateLabels
         return rewards;
     }
 
-    private static string TextOf(IntPtr h, ulong element, int offset = TextOffset)
+    internal static string TextOf(IntPtr h, ulong element, int offset = TextOffset)
     {
         var buf = new byte[Math.Max(TextOffset, offset) + 0x20];
         return Read(h, element, buf) ? EntityReader.ReadWString(h, buf, offset) : "";
     }
 
     /// <summary>Ogeyi okur; kendi adresini tutmuyorsa (silinmis ya da baska bir sey) false.</summary>
-    private static bool Read(IntPtr h, ulong address, byte[] buf) =>
+    internal static bool Read(IntPtr h, ulong address, byte[] buf) =>
         EntityReader.Read(h, address, buf) && BitConverter.ToUInt64(buf, OffSelf) == address;
 }

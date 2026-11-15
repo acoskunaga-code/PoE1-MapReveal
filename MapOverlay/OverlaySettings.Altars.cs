@@ -35,6 +35,11 @@ internal sealed partial class OverlaySettings
 
     internal bool Wildwood { get; set; } = true;
 
+    // "djinn-caches = acik / kapali": Djinn's Cache sandiklari (3.30) haritada, maden renginde ve icerikleriyle.
+    private const string DjinnCachesKey = "djinn-caches";
+
+    internal bool DjinnCaches { get; set; } = true;
+
     private static List<string> ReadAltarPhrases(string value) =>
         value.Split(AltarTextSeparator, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
 
@@ -55,6 +60,7 @@ internal sealed partial class OverlaySettings
         lines.Add($"{AltarPlayerColorKey} = {ColorText(this.AltarPlayerColor)}");
         lines.Add($"{AltarTextColorKey} = {ColorText(this.AltarTextColor)}");
         lines.Add($"{WildwoodKey} = {(this.Wildwood ? "acik" : "kapali")}");
+        lines.Add($"{DjinnCachesKey} = {(this.DjinnCaches ? "acik" : "kapali")}");
 
         // Ayiracin kendisi yaziya girmesin: satir tekrar okunurken bolunurdu.
         var phrases = this.AltarPhrases.Select(p => p.Replace(AltarTextSeparator, ' ').Trim()).Where(p => p.Length > 0);

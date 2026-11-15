@@ -70,8 +70,11 @@ internal sealed partial class OverlaySettings
                     case PathOnKey or PathOffKey:
                         ReadPathLine(settings, key, value);
                         break;
-                    case FateRewardsKey or FateTextKey or FateTextColorKey:
+                    case FateRewardsKey or FateTextKey or FateTextColorKey or FatePlanKey or FateRankKey:
                         ReadFateLine(settings, key, value);
+                        break;
+                    case DjinnCachesKey:
+                        settings.DjinnCaches = !value.Equals("kapali", StringComparison.OrdinalIgnoreCase);
                         break;
                     case WildwoodKey:
                         settings.Wildwood = !value.Equals("kapali", StringComparison.OrdinalIgnoreCase);

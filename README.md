@@ -21,7 +21,8 @@
 - 🚪 **Exit paths** — a coloured route from you to every exit, labelled with where it leads. Pick which exits get a route (Settings → Paths).
 - 📍 **Map icons** — shrines, strongboxes, essences, NPCs and more, with their names. Opened strongboxes and taken shrines disappear. Size per icon, searchable list.
 - 🔮 **Eldritch altars** — every "Player gains" choice framed, plus a gold frame for any text you type (e.g. *Divine Orb*). Colours are yours to pick.
-- 🪶 **Fates (Covens)** — the moment the "Select a Fate" panel opens, each card shows what its small round reward icons say, written above the card. No need to hover them one by one. Rewards that contain a word you type (e.g. *Rare Rings*) are coloured and their card's box is framed.
+- 🪶 **Fates (Covens)** — the moment the "Select a Fate" panel opens, each card shows what its small round reward icons say, written above the card. No need to hover them one by one. Rewards that contain a word you type (e.g. *Rare Rings*) are coloured and their card's box is framed. On the "Invoke Fates" panel the best cards get numbers in the order to click them, ranked by your own reward list (Settings → Fates; can be switched off).
+- 🏺 **Djinn's Caches** — marked on the map with their metal and contents (Settings → Altars; can be switched off).
 - 🌿 **The Viridian Wildwood** — wisps by colour and size, fuel orbs, altars and Nameless Shrines.
 - ⌨️ **Hotkeys** — one key hides the whole overlay (default **F9**), another hides only the exit paths (default **F10**). Both can be changed.
 - ⚡ **Quick** — the first map appears about 4–5 s after starting, a new zone is picked up in about 0.1–0.2 s.

@@ -989,6 +989,7 @@ internal sealed partial class OverlayForm : Form
         this.PaintWildwood(e, m);
         this.PaintMonsters(e, m);
         this.PaintMapIcons(e, m);
+        this.PaintCaches(e, m);
 
             if (this.calibrating)
             {

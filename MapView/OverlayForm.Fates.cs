@@ -49,7 +49,7 @@ internal sealed partial class OverlayForm
             this.fateMatchFrame = new Pen(key, 3f);
         }
 
-        if (!enabled) { this.fateCards = Array.Empty<FateLabels.Card>(); }
+        if (!enabled && !this.fatePlanEnabled) { this.fateCards = Array.Empty<FateLabels.Card>(); }
     }
 
     /// <summary>Odulde aranan yazilardan biri geciyor mu.</summary>
@@ -65,7 +65,8 @@ internal sealed partial class OverlayForm
     /// <summary>Arka plan, saniyede dort kez (RefreshAltars ile ayni yerden): acik kartlarin yazilari.</summary>
     private void RefreshFates(IntPtr h)
     {
-        if (!this.fateEnabled || h == IntPtr.Zero || this.MapElement == 0)
+        // Odul yazilari kapali olsa da en iyi secim onerisi (OverlayForm.FatePlan.cs) acikken kartlar okunuyor.
+        if ((!this.fateEnabled && !this.fatePlanEnabled) || h == IntPtr.Zero || this.MapElement == 0)
         {
             this.fateCards = Array.Empty<FateLabels.Card>();
             return;
@@ -85,6 +86,7 @@ internal sealed partial class OverlayForm
             if (FateLabels.Scan(h, this.fatePanel) is { } cards)
             {
                 this.fateCards = cards.ToArray();
+                this.UpdateFatePlan(h, cards);
                 return;
             }
 
@@ -202,7 +204,7 @@ internal sealed partial class OverlayForm
         var boxes = new List<RectangleF>();
         foreach (var (card, rect, hovered) in placed)
         {
-            if (hovered) { continue; }
+            if (hovered || !this.fateEnabled) { continue; }
 
             // Kutu genisligi AYNI SIRADAKI kartlara gore (ust uste iki sira kart olabiliyor: secim kartlari ve alttaki
             // toplanmis Fate'ler); butun kartlara gore olcunce iki siranin yakin merkezleri kutuyu daraltiyordu.
@@ -237,6 +239,9 @@ internal sealed partial class OverlayForm
                 e.Graphics.DrawRectangle(AltarFrameEdge, frame.X, frame.Y, frame.Width, frame.Height);
             }
         }
+
+        // En iyi secim: numaralar ve "Best" kutusu, odul kutularinin yerleri belli olduktan sonra (onlara binmesin).
+        this.PaintFatePlan(e.Graphics, placed, boxes, font, height);
     }
 
     private const float RewardGap = 4f;

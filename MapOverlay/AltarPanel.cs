@@ -70,10 +70,24 @@ internal sealed class AltarPanel : Panel
             apply();
         };
 
+        // Djinn's Cache sandiklari (OverlayForm.Caches.cs): harita simgeleri olmadigi icin Icons sekmesinde degiller.
+        var caches = new CheckBox
+        {
+            AutoSize = true,
+            Location = new Point(12, 326),
+            Text = "Djinn's Caches: chest marker with metal and contents",
+            Checked = settings.DjinnCaches,
+        };
+        caches.CheckedChanged += (_, _) =>
+        {
+            settings.DjinnCaches = caches.Checked;
+            apply();
+        };
+
         var hint = new Label
         {
-            Location = new Point(12, 332),
-            Size = new Size(456, 170),
+            Location = new Point(12, 358),
+            Size = new Size(456, 150),
             ForeColor = SystemColors.GrayText,
             Text = "A choice is framed when its text contains the line, whoever gains it (Player, Map boss, " +
                    "Eldritch Minions). If a choice is both, the two frames are drawn one inside the other.\n\n" +
@@ -82,7 +96,7 @@ internal sealed class AltarPanel : Panel
                    "Upper / lower case does not matter. A short part like \"Divine Orb\" is enough.",
         };
 
-        this.Controls.AddRange(new Control[] { player, playerColor, label, textColor, phrases, wildwood, hint });
+        this.Controls.AddRange(new Control[] { player, playerColor, label, textColor, phrases, wildwood, caches, hint });
     }
 
     /// <summary>Rengi gosteren ve tiklaninca renk penceresini acan dugme (ColorPick).</summary>

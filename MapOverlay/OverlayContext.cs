@@ -128,8 +128,10 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.overlay.SetAltarHighlight(
             this.settings.AltarPlayer, this.settings.AltarPhrases, this.settings.AltarPlayerColor, this.settings.AltarTextColor);
         this.overlay.SetFateLabels(this.settings.FateRewards, this.settings.FatePhrases, this.settings.FateTextColor);
+        this.overlay.SetFatePlan(this.settings.FatePlan, this.settings.FateRanking);
         this.overlay.SetHiddenPaths(this.settings.HiddenPaths);
         this.overlay.SetWildwood(this.settings.Wildwood);
+        this.overlay.SetDjinnCaches(this.settings.DjinnCaches);
 
         RegisterKey(this.toggleKey, this.settings.ToggleKey, "acma/kapama tusu");
         RegisterKey(this.pathKey, this.settings.PathKey, "yol tusu");

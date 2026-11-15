@@ -25,6 +25,9 @@ internal static class AreaHolder
     private const long OwnBlock = 0x4000;
     private const int MaxRecipes = 8;
 
+    /// <summary>Bu oturumda alan degisimini takip etmeyen (bayat cikan) bir tarif bu kadar olunca siliniyor.</summary>
+    private const int MissesToDrop = 2;
+
     private readonly record struct Holder(int Slot, ulong Object, int Back);
 
     private static readonly object Gate = new();
@@ -33,6 +36,17 @@ internal static class AreaHolder
     private static ulong pendingArea;
     private static List<(int Slot, int Back)> recipes = new();
     private static bool loaded;
+
+    // 15.11.2026, bir kullanicinin gunlugu: karakter secim ekranina donunce dogru tarif (2C0:218, 580:A0, 880:28) o
+    // ekranda tutmadi, oradan cikan TEK yanlis aday (300:10, alanla birlikte yeniden olusan bir nesne) iki yuklemede
+    // ayni adreste kalinca "kalici" sayildi ve dosyadaki dogru tarifin USTUNE yazildi. Sonra her alan degisiminde o
+    // tutucu bayat cikti, tarifle yeniden bulundu, aday hic cikarilmadi: 104 yuklemenin 81'i 8 sn bekleme + tarama.
+    // Simdi: tarifler birlestiriliyor (yeni + eski), bir alan degisimini gercekten takip eden tutucu "kanitli" sayiliyor,
+    // kanitli tutucu yokken aday cikarmaya devam ediliyor, takip etmeyen tarif iki kez bayat cikinca siliniyor.
+    private static readonly HashSet<Holder> Proven = new();
+    private static readonly Dictionary<(int Slot, int Back), int> Misses = new();
+    private static readonly HashSet<(int Slot, int Back)> ProvenRecipes = new();
+    private static ulong lastArea;
 
     /// <summary>Tanilama gunlugu; uygulama kendi gunlugune baglar.</summary>
     internal static Action<string>? Log { get; set; }
@@ -98,20 +112,48 @@ internal static class AreaHolder
         lock (Gate)
         {
             EnsureLoaded();
+            var changed = lastArea != 0 && area != lastArea;
+            lastArea = area;
 
             // 1. Kalici sanilanlar hala bu alani gosteriyor mu? Gostermiyorsa bayat (yama, oyun yeniden basladi,
-            //    ya da hic kalici degildi): elenir.
-            var before = Live.Count;
-            Live.RemoveAll(x => PlayerChain.ReadPointer(h, x.Object + (ulong)x.Back) != area);
-            if (before > 0 && Live.Count < before) { Log?.Invoke($"alan tutucu: {before - Live.Count} bayat tutucu elendi"); }
+            //    ya da hic kalici degildi): elenir. Alan degistiyse takip edenler kanitli, etmeyenlerin tarifi bir ceza
+            //    aliyor; bu oturumda hic takip etmemis bir tarif MissesToDrop cezada siliniyor.
+            var stale = Live.Where(x => PlayerChain.ReadPointer(h, x.Object + (ulong)x.Back) != area).ToList();
+            var dropped = new List<(int Slot, int Back)>();
+            foreach (var x in Live.Except(stale).Where(_ => changed))
+            {
+                Proven.Add(x);
+                ProvenRecipes.Add((x.Slot, x.Back));
+            }
 
-            // 2. Onceki alandan gelen adaylar bu alani da gosteriyorsa KALICI.
+            foreach (var x in stale)
+            {
+                Live.Remove(x);
+                Proven.Remove(x);
+                var key = (x.Slot, x.Back);
+                if (!changed || ProvenRecipes.Contains(key)) { continue; }
+
+                Misses[key] = Misses.GetValueOrDefault(key) + 1;
+                if (Misses[key] >= MissesToDrop && recipes.Remove(key)) { dropped.Add(key); }
+            }
+
+            if (stale.Count > 0) { Log?.Invoke($"alan tutucu: {stale.Count} bayat tutucu elendi"); }
+            if (dropped.Count > 0)
+            {
+                Save();
+                Log?.Invoke("alan tutucu: alan degisimini takip etmeyen tarif silindi " +
+                            string.Join(", ", dropped.Select(r => $"alan+0x{r.Slot:X}->+0x{r.Back:X}")));
+            }
+
+            // 2. Onceki alandan gelen adaylar bu alani da gosteriyorsa KALICI (bir alan degisimini takip ettiler: kanitli).
             var confirmed = 0;
             foreach (var p in pending)
             {
                 if (PlayerChain.ReadPointer(h, p.Object + (ulong)p.Back) == area && !Live.Contains(p))
                 {
                     Live.Add(p);
+                    Proven.Add(p);
+                    ProvenRecipes.Add((p.Slot, p.Back));
                     confirmed++;
                 }
             }
@@ -134,18 +176,22 @@ internal static class AreaHolder
                 if (Live.Count > 0) { Log?.Invoke($"alan tutucu: kayitli tarifle {Live.Count} kalici nesne bulundu"); }
             }
 
-            // 4. Hala yok: bu alandan aday cikar, bir sonraki alan degisiminde sinanacak.
-            if (Live.Count == 0)
+            // 4. Kanitli tutucu yok (hic yok, ya da sadece tarifle bulunmus, henuz bir alan degisimini takip etmemis olan):
+            //    bu alandan aday cikar, bir sonraki alan degisiminde sinanacak. Eskiden yalnizca hic tutucu yokken
+            //    cikariliyordu; yanlis bir tarif her seferinde "bulununca" ogrenme sonsuza dek duruyordu.
+            if (!Live.Any(Proven.Contains))
             {
-                pending = Candidates(h, area);
+                pending = Candidates(h, area).Where(c => !Live.Contains(c)).ToList();
                 pendingArea = area;
                 Log?.Invoke($"alan tutucu: {pending.Count} aday cikarildi, sonraki alan degisiminde sinanacak");
-                return;
+                if (Live.Count == 0) { return; }
             }
 
             if (confirmed > 0)
             {
-                recipes = Live.Select(x => (x.Slot, x.Back)).Distinct().Take(MaxRecipes).ToList();
+                // Yeni tarifler one, eskiler korunarak (bir alanda tutmayan dogru tarif kaybolmasin).
+                recipes = Live.Where(Proven.Contains).Select(x => (x.Slot, x.Back))
+                    .Concat(recipes).Distinct().Take(MaxRecipes).ToList();
                 Save();
                 Log?.Invoke($"alan tutucu: {confirmed} aday iki alanda ayni adreste cikti, tarif yazildi " +
                             string.Join(", ", recipes.Select(r => $"alan+0x{r.Slot:X}->+0x{r.Back:X}")));

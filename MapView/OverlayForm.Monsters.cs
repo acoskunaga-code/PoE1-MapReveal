@@ -93,10 +93,16 @@ internal sealed partial class OverlayForm
     {
         if (this.areaBase != area)
         {
-            lock (this.entityCache) { this.entityCache.Clear(); }
+            lock (this.entityCache)
+            {
+                this.entityCache.Clear();
+                this.ResetCacheWatch();
+            }
+
             this.trackedMonsters = Array.Empty<(ulong, int)>();
             this.trackedIcons = Array.Empty<MapIconTarget>();
             this.trackedWildwood = Array.Empty<(ulong, WildwoodReader.Marker)>();
+            this.trackedCaches = Array.Empty<(ulong, CacheReader.Marker)>();
 
             // Altar etiket kabi alan degisince yeniden bulunsun (arayuz yeniden kurulabiliyor; OverlayForm.Altars.cs).
             this.altarContainer = 0;
@@ -133,14 +139,16 @@ internal sealed partial class OverlayForm
             var iconSizes = this.mapIconSizes;
             var wantMonsters = Array.IndexOf(style.Visible, true) >= 0;
             var wantWildwood = this.wildwood;
+            var wantCaches = this.djinnCaches;
 
             // Hepsi kapaliysa varlik listesini gezmeye de gerek yok.
-            if (h == IntPtr.Zero || area == 0 || (!wantMonsters && iconSizes is null && !wantWildwood) ||
+            if (h == IntPtr.Zero || area == 0 || (!wantMonsters && iconSizes is null && !wantWildwood && !wantCaches) ||
                 EntityReader.ReadMapHeader(h, area + EntityReader.AwakeMap) is not { } map)
             {
                 this.trackedMonsters = Array.Empty<(ulong, int)>();
                 this.trackedIcons = Array.Empty<MapIconTarget>();
                 this.trackedWildwood = Array.Empty<(ulong, WildwoodReader.Marker)>();
+                this.trackedCaches = Array.Empty<(ulong, CacheReader.Marker)>();
                 this.RefreshAltars(h, entitiesWalked: false);
                 this.RefreshFates(h);
                 return;
@@ -150,7 +158,7 @@ internal sealed partial class OverlayForm
 
             // Uyuyan liste harita simgeleri ve Wildwood icin (OverlayForm.Icons.cs, OverlayForm.Wildwood.cs): bunlar
             // yerinden oynamiyor. Canavarlarin oradaki konumu bayat, onlar icin kullanilmiyor.
-            var sleeping = (iconSizes is not null || wantWildwood) &&
+            var sleeping = (iconSizes is not null || wantWildwood || wantCaches) &&
                            EntityReader.ReadMapHeader(h, area + EntityReader.SleepingMap) is { } sleepingMap
                 ? EntityReader.WalkMap(h, sleepingMap, 5000)
                 : new List<(uint, ulong)>();
@@ -160,6 +168,8 @@ internal sealed partial class OverlayForm
             var iconRenders = new HashSet<ulong>();
             var foundWildwood = new List<(ulong, WildwoodReader.Marker)>();
             var wildwoodRenders = new HashSet<ulong>();
+            var foundCaches = new List<(ulong, CacheReader.Marker)>();
+            var cacheRenders = new HashSet<ulong>();
             var seen = new HashSet<(uint, ulong)>();
 
             lock (this.entityCache)
@@ -182,6 +192,7 @@ internal sealed partial class OverlayForm
                     this.NoteAltar(info);
                     if (iconSizes is not null) { this.CollectIcon(h, entity, info, iconSizes, foundIcons, iconRenders); }
                     if (wantWildwood) { this.CollectWildwood(h, entity, info, foundWildwood, wildwoodRenders); }
+                    if (wantCaches) { this.CollectCache(h, entity, info, foundCaches, cacheRenders); }
                 }
 
                 foreach (var (id, entity) in sleeping)
@@ -190,7 +201,10 @@ internal sealed partial class OverlayForm
 
                     if (iconSizes is not null) { this.CollectIcon(h, entity, info, iconSizes, foundIcons, iconRenders); }
                     if (wantWildwood) { this.CollectWildwood(h, entity, info, foundWildwood, wildwoodRenders); }
+                    if (wantCaches) { this.CollectCache(h, entity, info, foundCaches, cacheRenders); }
                 }
+
+                if (wantCaches) { this.EndCacheTurn(); }
 
                 // Listeden cikanlari unut, yoksa onbellek alan boyunca buyur.
                 if (this.entityCache.Count > (seen.Count * 2) + 64)
@@ -205,6 +219,7 @@ internal sealed partial class OverlayForm
             this.trackedMonsters = found.ToArray();
             this.trackedIcons = foundIcons.ToArray();
             this.trackedWildwood = foundWildwood.ToArray();
+            this.trackedCaches = foundCaches.ToArray();
             this.LogIconSummary(foundIcons);
             this.RefreshAltars(h, entitiesWalked: true);
             this.RefreshFates(h);

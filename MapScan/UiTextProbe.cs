@@ -11,7 +11,7 @@ namespace Poe2Map;
 /// </summary>
 internal static class UiTextProbe
 {
-    private const int Span = 0x400;
+    private const int Span = 0x600;   // 14.11.2026: Atlas thread yuvalarinin yazilari +0x490 / +0x538'de (strscan)
     private const int OffSelf = 0xB8;
     private const int OffChildren = 0xC0;
 

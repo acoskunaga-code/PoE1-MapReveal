@@ -47,8 +47,13 @@
     <Compile Include="..\MapScan\AltarLabels.cs" Link="Shared\AltarLabels.cs" />
     <Compile Include="..\MapScan\FateLabels.cs" Link="Shared\FateLabels.cs" />
     <Compile Include="..\MapView\OverlayForm.Fates.cs" Link="Shared\OverlayForm.Fates.cs" />
+    <Compile Include="..\MapView\OverlayForm.FatePlan.cs" Link="Shared\OverlayForm.FatePlan.cs" />
+    <Compile Include="..\MapScan\FatePlanner.cs" Link="Shared\FatePlanner.cs" />
     <Compile Include="..\MapView\OverlayForm.Wildwood.cs" Link="Shared\OverlayForm.Wildwood.cs" />
     <Compile Include="..\MapScan\WildwoodReader.cs" Link="Shared\WildwoodReader.cs" />
+    <Compile Include="..\MapScan\CacheReader.cs" Link="Shared\CacheReader.cs" />
+    <Compile Include="..\MapView\OverlayForm.Caches.cs" Link="Shared\OverlayForm.Caches.cs" />
+    <Compile Include="..\MapView\OverlayForm.CacheWatch.cs" Link="Shared\OverlayForm.CacheWatch.cs" />
     <Compile Include="..\MapView\FrameStats.cs" Link="Shared\FrameStats.cs" />
     <Compile Include="..\MapView\OverlayForm.Frame.cs" Link="Shared\OverlayForm.Frame.cs" />
     <Compile Include="..\MapScan\ExitFinder.cs" Link="Shared\ExitFinder.cs" />

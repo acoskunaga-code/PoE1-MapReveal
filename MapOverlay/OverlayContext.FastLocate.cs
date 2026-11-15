@@ -34,8 +34,12 @@ internal sealed partial class OverlayContext
             // Birincil yol (PoE1): kalici nesnelerin gosterdigi alan. Eski iki yol PoE2'den kaldi ve PoE1'de tutmuyor
             // (oyuncu varligi her alanda yeniden olusuyor, eski alan yapilari bosaliyor); ikisi de yedek.
             // Tarif henuz yoksa (yeni kurulum) dogrulanmamis adaylar: ilk alan degisimi de taramasiz (AreaHolder.PendingCurrent).
-            var held = AreaHolder.Ready ? AreaHolder.Current(h) : AreaHolder.PendingCurrent(h);
+            // 15.11.2026: tutucu varken de adaylar deneniyor - tutucu yanlis olabilir (tarif bayat ya da yanlis ogrenilmis,
+            // bir kullanicida her alan degisimi boyle 8 sn bekleyip taramaya dusuyordu).
+            var held = AreaHolder.Ready ? AreaHolder.Current(h) : 0;
+            var candidate = AreaHolder.PendingCurrent(h);
             var found = (held != 0 ? LocalPlayer.FromArea(h, held) : null) ??
+                        (candidate != 0 && candidate != held ? LocalPlayer.FromArea(h, candidate) : null) ??
                         (entity != 0 ? LocalPlayer.FromEntity(h, entity) : null) ??
                         LocalPlayer.FromKnownAreas(h, areas);
             if (found is not null) { return found; }

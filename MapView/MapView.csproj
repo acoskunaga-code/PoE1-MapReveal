@@ -33,7 +33,9 @@
     <Compile Include="..\MapScan\MapIconReader.cs" Link="MapIconReader.cs" />
     <Compile Include="..\MapScan\AltarLabels.cs" Link="AltarLabels.cs" />
     <Compile Include="..\MapScan\FateLabels.cs" Link="FateLabels.cs" />
+    <Compile Include="..\MapScan\FatePlanner.cs" Link="FatePlanner.cs" />
     <Compile Include="..\MapScan\WildwoodReader.cs" Link="WildwoodReader.cs" />
+    <Compile Include="..\MapScan\CacheReader.cs" Link="CacheReader.cs" />
     <Compile Include="..\MapScan\LocalPlayer.cs" Link="LocalPlayer.cs" />
     <Compile Include="..\MapScan\ExitFinder.cs" Link="ExitFinder.cs" />
     <Compile Include="..\MapScan\FlowField.cs" Link="FlowField.cs" />

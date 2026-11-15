@@ -45,7 +45,7 @@ internal static class FatesCommand
             var (cw, ch) = (rc.Right - rc.Left, rc.Bottom - rc.Top);
             foreach (var card in cards)
             {
-                Console.WriteLine($"{card.Name}  (govde {card.Body:X})");
+                Console.WriteLine($"{card.Name}  (govde {card.Body:X}, grup {card.Group})");
                 foreach (var reward in card.Rewards) { Console.WriteLine("    - " + reward.Replace("\n", " / ")); }
                 foreach (var part in card.Parts)
                 {
@@ -56,6 +56,36 @@ internal static class FatesCommand
                         ? $"({p.X:F0},{p.Y:F0}) {e.SizeX * size.W:F0}x{e.SizeY * size.H:F0} {(e.Visible ? "gorunur" : "gizli")}"
                         : "yer yok"));
                 }
+            }
+
+            // Ustteki yuvalarin altindaki toplam odul satiri (FateTotals): ayni addan iki kart konunca kopya odulleri.
+            if (FateTotals.Read(h, panel) is { } totals)
+            {
+                Console.WriteLine($"secim satiri {totals.Element:X}  ozet: {FateLabels.Clean(totals.Summary).Replace("\n", " | ")}");
+                foreach (var (title, icons) in new[] { ("kazanilan", totals.Gains), ("kopya", totals.Copies) })
+                {
+                    foreach (var icon in icons.Where(i => all || i.Visible))
+                    {
+                        var at = UiFinder.ElementPosition(h, icon.Element, cw, ch);
+                        Console.WriteLine($"    [{title}{(icon.Visible ? "" : " gizli")}] " +
+                                          $"{(at is { } p ? $"({p.X:F0},{p.Y:F0}) " : "")}{icon.Text.Replace("\n", " / ")}");
+                    }
+                }
+            }
+
+            // En iyi secim (FatePlanner, baslangic sirasiyla): overlay'in eldeki kartlara yazdigi numaralar.
+            // "hepsi" kipinde oduller "[simge] " gibi etiketli; kapali panelde de denenebilsin diye gorunur simgeler aliniyor.
+            const string Shown = "[simge] ";
+            var hand = cards.Where(c => c.Group == 1 && c.Name.Length > 0)
+                .Select(c => all ? c with { Rewards = c.Rewards.Where(r => r.StartsWith(Shown)).Select(r => r[Shown.Length..]).ToList() } : c)
+                .ToList();
+            var picks = FateLabels.TopSlots(h, panel);
+            Console.WriteLine($"Invoke Fates: {FateLabels.IsInvoke(h, panel)}  ust yuva: {picks}  elde: {hand.Count} kart");
+            if (FatePlanner.Best(hand, picks > 0 ? picks : 3, FatePlanner.DefaultRanking) is { } plan)
+            {
+                Console.WriteLine("oneri: " + string.Join(", ", plan.Order.Select((c, i) =>
+                    $"{i + 1} {c.Name}{(plan.Mains.Contains(c) && plan.Order.Count(o => o.Name == c.Name) > 1 ? " (ana)" : "")}")));
+                Console.WriteLine($"    -> {FatePlanner.Describe(plan.Gains)}  (puan {plan.Score:F0})");
             }
 
             return 0;

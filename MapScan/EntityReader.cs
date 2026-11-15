@@ -58,6 +58,9 @@ internal static class EntityReader
         internal WildwoodReader.Marker? Wildwood;
         internal int WildwoodTries;
 
+        // Djinn's Cache isareti (CacheReader.Classify): null = henuz belirlenmedi. Yoldan, bir kez.
+        internal CacheReader.Marker? Cache;
+
         internal bool IsMonster => this.Path.StartsWith("Metadata/Monsters/", StringComparison.Ordinal);
     }
 
