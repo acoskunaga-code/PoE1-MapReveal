@@ -18,10 +18,10 @@
 
 - 🗺️ **Whole map on entry** — the explored *and* unexplored layout, lined up with the game's own large map as you zoom and pan.
 - 👹 **Monsters by rarity** — 🔴 normal · 🔵 magic · 🟡 rare · 🟤 unique. Each rarity can be switched off or resized.
-- 🚪 **Exit paths** — a coloured route from you to every exit, labelled with where it leads. Pick which exits get a route (Settings → Paths).
-- 📍 **Map icons** — shrines, strongboxes, essences, NPCs and more, with their names. Opened strongboxes and taken shrines disappear. Size per icon, searchable list.
+- 🚪 **Exit paths** — a coloured route from you to every exit, labelled with where it leads. Pick which exits are shown at all (Settings → Paths, with a search box); an unticked exit loses its route, marker and name.
+- 📍 **Map icons** — shrines, strongboxes, essences, NPCs, Fate cauldrons and more, with their names. Opened strongboxes and taken shrines disappear. Size per icon, searchable list.
 - 🔮 **Eldritch altars** — every "Player gains" choice framed, plus a gold frame for any text you type (e.g. *Divine Orb*). Colours are yours to pick.
-- 🪶 **Fates (Covens)** — the moment the "Select a Fate" panel opens, each card shows what its small round reward icons say, written above the card. No need to hover them one by one. Rewards that contain a word you type (e.g. *Rare Rings*) are coloured and their card's box is framed. On the "Invoke Fates" panel the best cards get numbers in the order to click them, ranked by your own reward list (Settings → Fates; can be switched off).
+- 🪶 **Fates (Covens)** — the moment the "Select a Fate" panel opens, each card shows what its small round reward icons say, written above the card. No need to hover them one by one. Rewards that contain a word you type (e.g. *Rare Rings*) are coloured and their card's box is framed. On each "Select a Fate" pick a green **TAKE** marks the card that leads to the best combination with the cards you already hold, and offered cards with the same name as one in your hand get a gold **COPY** frame. On the "Invoke Fates" panel the best cards get numbers in the order to click them. Both follow your own reward list (Settings → Fates; can be switched off). Nothing is drawn over the Confirm button.
 - 🏺 **Djinn's Caches** — marked on the map with their metal and contents (Settings → Altars; can be switched off).
 - 🌿 **The Viridian Wildwood** — wisps by colour and size, fuel orbs, altars and Nameless Shrines.
 - ⌨️ **Hotkeys** — one key hides the whole overlay (default **F9**), another hides only the exit paths (default **F10**). Both can be changed.

@@ -65,6 +65,32 @@ internal static class FateLabels
     /// <summary>Ustteki gruptaki gorunur yuva sayisi: en fazla kac kart konabilir (15.11.2026: 3). Bulunamazsa 0.</summary>
     internal static int TopSlots(IntPtr h, ulong panel) => Slots(h, panel).Count(s => s.Group == 0 && UiFinder.ChainVisible(h, s.Slot));
 
+    /// <summary>
+    ///     Panelin butonlari: ilk cocugunun yazisi "confirm" ya da "invoke" olan dogrudan cocuklar. 16.11.2026 canli
+    ///     (`MapScan uitext ^confirm$` + `uichain`): Select a Fate panelinde panel/9, 214x50 (1920x1017'de ~136x32, iki kart
+    ///     sirasinin arasinda ortada), yazi cocugu panel/9/0 +0x358 "confirm". Kullanicinin istegi: ustune yazi gelmesin;
+    ///     overlay kutulari bunlara bindirmiyor. "invoke" Invoke Fates paneli icin tahmin, DOGRULANMADI.
+    /// </summary>
+    internal static List<ulong> Buttons(IntPtr h, ulong panel)
+    {
+        var buttons = new List<ulong>();
+        var buf = new byte[TextOffset + 0x20];
+        if (!Read(h, panel, buf)) { return buttons; }
+
+        foreach (var child in AltarLabels.Children(h, buf).Take(32))
+        {
+            if (!Read(h, child, buf) || AltarLabels.Children(h, buf) is not [var label, ..]) { continue; }
+
+            var text = Clean(TextOf(h, label));
+            if (text.Equals("confirm", StringComparison.OrdinalIgnoreCase) || text.Equals("invoke", StringComparison.OrdinalIgnoreCase))
+            {
+                buttons.Add(child);
+            }
+        }
+
+        return buttons;
+    }
+
     internal static string PathFile => AppPaths.File("fate-panel.txt");
 
     /// <summary>Yavas arama (arka planda): kokten tuy yardim yazisini bulup paneli dondurur. Yoksa 0.</summary>

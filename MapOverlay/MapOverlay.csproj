@@ -48,6 +48,7 @@
     <Compile Include="..\MapScan\FateLabels.cs" Link="Shared\FateLabels.cs" />
     <Compile Include="..\MapView\OverlayForm.Fates.cs" Link="Shared\OverlayForm.Fates.cs" />
     <Compile Include="..\MapView\OverlayForm.FatePlan.cs" Link="Shared\OverlayForm.FatePlan.cs" />
+    <Compile Include="..\MapView\OverlayForm.FateDraft.cs" Link="Shared\OverlayForm.FateDraft.cs" />
     <Compile Include="..\MapScan\FatePlanner.cs" Link="Shared\FatePlanner.cs" />
     <Compile Include="..\MapView\OverlayForm.Wildwood.cs" Link="Shared\OverlayForm.Wildwood.cs" />
     <Compile Include="..\MapScan\WildwoodReader.cs" Link="Shared\WildwoodReader.cs" />

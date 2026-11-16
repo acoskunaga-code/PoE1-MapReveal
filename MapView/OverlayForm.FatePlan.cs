@@ -22,27 +22,46 @@ internal sealed partial class OverlayForm
     private HashSet<ulong> fatePlanTaken = new();
     private Font? planBadgeFont;
 
+    // Select a Fate onerisi ve Invoke Fates'teki yuva sayisi (son gorulen; gorulmeden once 3).
+    private (FateLabels.Card Pick, FatePlanner.Plan Plan)? fateDraft;
+    private int invokeSlots = 3;
+
     /// <summary>Oneri acik mi ve odul sirasi (en iyi en ustte).</summary>
     internal void SetFatePlan(bool enabled, IEnumerable<string> ranking)
     {
         this.fatePlanEnabled = enabled;
         this.fateRanking = ranking.ToArray();
-        if (!enabled) { this.fatePlan = null; }
+        if (!enabled)
+        {
+            this.fatePlan = null;
+            this.fateDraft = null;
+        }
+
         if (!enabled && !this.fateEnabled) { this.fateCards = Array.Empty<FateLabels.Card>(); }
     }
 
-    /// <summary>Arka plan, RefreshFates'ten: panel Invoke Fates ise eldeki kartlardan en iyi secim.</summary>
+    /// <summary>
+    ///     Arka plan, RefreshFates'ten. Invoke Fates: eldeki kartlardan en iyi secim. Select a Fate: teklif edilen kartlardan
+    ///     (grup 0) hangisi alinmali, eldekilerle (grup 1, ilk secimden sonra panelde gorunuyor) birlikte; bkz.
+    ///     <see cref="FatePlanner.Draft"/>.
+    /// </summary>
     private void UpdateFatePlan(IntPtr h, IReadOnlyList<FateLabels.Card> cards)
     {
         var hand = cards.Where(c => c.Group == 1).ToList();
-        if (!this.fatePlanEnabled || hand.Count == 0 || !FateLabels.IsInvoke(h, this.fatePanel))
+        var invoke = this.fatePlanEnabled && FateLabels.IsInvoke(h, this.fatePanel);
+        this.fateDraft = null;
+        if (this.fatePlanEnabled && !invoke) { this.fateDraft = this.Draft(cards, hand); }
+        else { this.fateHandNames = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase); }
+        if (!invoke || hand.Count == 0)
         {
             this.fatePlan = null;
             return;
         }
 
         var picks = FateLabels.TopSlots(h, this.fatePanel);
-        this.fatePlan = FatePlanner.Best(hand, picks > 0 ? picks : 3, this.fateRanking);
+        if (picks > 0) { this.invokeSlots = picks; }
+
+        this.fatePlan = FatePlanner.Best(hand, picks > 0 ? picks : this.invokeSlots, this.fateRanking);
 
         // Uste konmus kartlar: eldeki ayni ad + ayni odullu kart (el sirasi uste konanlari da tutuyor).
         var taken = new HashSet<ulong>();
@@ -59,14 +78,18 @@ internal sealed partial class OverlayForm
     private void PaintFatePlan(Graphics g, List<(FateLabels.Card Card, RectangleF Rect, bool Hovered)> placed, List<RectangleF> boxes,
         Font font, int screenHeight)
     {
+        this.PaintFateCopies(g, placed, screenHeight);
+        if (this.fateDraft is { } draft)
+        {
+            this.PaintFateDraft(g, draft.Pick, draft.Plan, placed, boxes, font, screenHeight);
+            return;
+        }
+
         if (this.fatePlan is not { Order.Count: > 0 } plan) { return; }
 
         var rects = new List<RectangleF>();
         var badgeSize = Math.Clamp(36f * screenHeight / 1017f, 22f, 60f);
-        if (this.planBadgeFont is not { } badgeFont || Math.Abs(badgeFont.Size - (badgeSize * 0.5f)) > 0.1f)
-        {
-            badgeFont = this.planBadgeFont = new Font("Segoe UI", badgeSize * 0.5f, FontStyle.Bold, GraphicsUnit.Pixel);
-        }
+        var badgeFont = this.BadgeFont(badgeSize);
 
         for (var i = 0; i < plan.Order.Count; i++)
         {
@@ -127,6 +150,12 @@ internal sealed partial class OverlayForm
             {
                 return option;
             }
+        }
+
+        // boxes Confirm butonunu da tutuyor (PaintFates); bos yer yoksa butona binmeyen ilk yer.
+        foreach (var option in options)
+        {
+            if (screen.Contains(option) && !this.fateButtonRects.Any(b => b.IntersectsWith(option))) { return option; }
         }
 
         var below = options[0];

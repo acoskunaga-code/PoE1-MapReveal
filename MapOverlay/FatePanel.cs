@@ -39,7 +39,7 @@ internal sealed class FatePanel : Panel
         {
             AutoSize = true,
             Location = new Point(12, 184),
-            Text = "Invoke Fates: number the best cards in the order to click them",
+            Text = "Suggest cards: TAKE on Select a Fate, click order on Invoke Fates",
             Checked = settings.FatePlan,
         };
         plan.CheckedChanged += (_, _) =>
@@ -64,7 +64,8 @@ internal sealed class FatePanel : Panel
             ForeColor = SystemColors.GrayText,
             Text = "A reward is ranked by the first line it contains (\"Valuable Currency\" above \"Currency\"); rewards " +
                    "matching no line count least. Two cards with the same name: the one clicked first keeps its rewards " +
-                   "three times and opens its \"two copies\" reward, the other one's rewards are lost.\n\n" +
+                   "three times and opens its \"two copies\" reward, the other one's rewards are lost. Such a combination " +
+                   "beats a single reward that is a few lines higher (Unique x3 beats one Currency).\n\n" +
                    "Upper / lower case and numbers do not matter; a short part of the text is enough.",
         };
 

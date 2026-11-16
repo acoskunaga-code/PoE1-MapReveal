@@ -16,7 +16,7 @@ namespace Poe2Map;
 ///     overlay'in arka plan okumasindan. GDI+ ayni Bitmap'e ayni anda iki yerden dokunulmasina izin vermiyor,
 ///     o yuzden sayfaya her erisim tek kilit altinda.
 /// </summary>
-internal sealed class IconCatalog : IDisposable
+internal sealed partial class IconCatalog : IDisposable
 {
     internal const int ThumbSize = 32;
 
@@ -81,10 +81,10 @@ internal sealed class IconCatalog : IDisposable
     {
         lock (this.sync)
         {
-            if (this.atlas is null) { return null; }
+            if (this.atlas is null && entry.Index > 0) { return null; }
             if (this.thumbs.TryGetValue(entry.Index, out var cached)) { return cached; }
 
-            var thumb = this.Cut(entry.Index, ThumbSize);
+            var thumb = entry.Index < 0 ? DrawOwn(entry.Index, ThumbSize) : this.Cut(entry.Index, ThumbSize);
             if (thumb is not null) { this.thumbs[entry.Index] = thumb; }
 
             return thumb;
@@ -110,7 +110,7 @@ internal sealed class IconCatalog : IDisposable
 
             if (this.sprites.TryGetValue((index, size), out var cached)) { return cached; }
 
-            var sprite = this.Cut(index, size);
+            var sprite = index < 0 ? DrawOwn(index, size) : this.Cut(index, size);
             if (sprite is null) { return null; }
 
             KeepOffColourKey(sprite);
@@ -200,7 +200,7 @@ internal sealed class IconCatalog : IDisposable
             if (tab <= 0 || !int.TryParse(line[..tab], out var index) || index <= 0) { continue; }
 
             var name = line[(tab + 1)..].Trim();
-            if (name.Length == 0) { continue; }
+            if (name.Length == 0 || OwnIndex(name) is not null) { continue; }
 
             byName.TryAdd(name, index);
             var category = IconCategories.Of(name);
@@ -210,6 +210,8 @@ internal sealed class IconCatalog : IDisposable
 
             list.Add(new Entry(index, name, IconCategories.Pretty(name)));
         }
+
+        if (byCategory.Count > 0) { AddOwn(byCategory, byName); }
 
         var result = new List<Category>();
         foreach (var name in IconCategories.Order.Append(IconCategories.Other))

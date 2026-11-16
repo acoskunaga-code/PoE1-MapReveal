@@ -231,14 +231,14 @@ internal sealed partial class OverlayForm
     /// </summary>
     internal bool HidePaths;
 
-    // Ayar penceresinin Paths sekmesi: yolu cizilmeyecek cikis adlari. Butun olarak degistiriliyor (cizimle yarismasin).
+    // Ayar penceresinin Paths sekmesi: hic cizilmeyecek cikis adlari. Butun olarak degistiriliyor (cizimle yarismasin).
     private HashSet<string> hiddenPaths = new(StringComparer.OrdinalIgnoreCase);
     private string reportedExitNames = "";
 
     /// <summary>Gorulen cikis adlari (degisince, arka plan is parcacigindan): ayar listesine eklenmek uzere.</summary>
     internal Action<IReadOnlyList<string>>? ExitNamesSeen;
 
-    /// <summary>Yolu cizilmeyecek cikis adlari; kapinin isareti ve adi yine ciziliyor.</summary>
+    /// <summary>Cizilmeyecek cikis adlari: yolu, kapinin isareti ve adi.</summary>
     internal void SetHiddenPaths(IEnumerable<string> names) =>
         this.hiddenPaths = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
 
@@ -267,11 +267,13 @@ internal sealed partial class OverlayForm
         var hidden = this.hiddenPaths;
         foreach (var target in targets)
         {
+            // Paths sekmesinde kapatilan cikis: yol da, isaret de, ad da yok (16.11.2026 kullanicinin istegi; eskiden
+            // isaret ve ad kaliyordu).
+            if (hidden.Contains(target.Exit.Name)) { continue; }
+
             var ex = (target.Exit.X - player.X) / PlayerPos.UnitsPerCell;
             var ey = (target.Exit.Y - player.Y) / PlayerPos.UnitsPerCell;
-
-            // Paths sekmesinde kapatilan cikis: yol yok, isaret ve ad var (asagida).
-            var reached = (ex * ex) + (ey * ey) < ReachedCells * ReachedCells || hidden.Contains(target.Exit.Name);
+            var reached = (ex * ex) + (ey * ey) < ReachedCells * ReachedCells;
 
             if (!reached)
             {

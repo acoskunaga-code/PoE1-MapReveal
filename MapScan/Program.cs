@@ -88,6 +88,7 @@ internal static class Program
                 "dattable" => DatTableCommand.Run(args.Skip(1).ToArray()),
                 "chests" => ChestStateCommand.Run(args.Skip(1).ToArray()),
                 "paths" => EntityPathsCommand.Run(args.Skip(1).ToArray()),
+                "comps" => ComponentsCommand.Run(args.Skip(1).ToArray()),
                 "entityrefs" => EntityRefsCommand.Run(args.Skip(1).ToArray()),
                 "buffs" => BuffProbe.Run(args.Skip(1).ToArray()),
                 "buffs-watch" => BuffProbe.Watch(args.Skip(1).ToArray()),

@@ -14,8 +14,11 @@ namespace Poe2Map;
 ///         - tek kart normal odullerini 1 kat veriyor, kopya odulu acilmiyor
 ///     3 kopya henuz gorulmedi: carpan 2 kopyadaki gibi sayiliyor, "three copies" odulu aciliyor (DOGRULANMADI).
 ///
-///     Puan: kullanicinin sirasinda (en iyi en ustte) ilk uyan yazinin agirligi 4^(n - sira); hicbirine uymayan 1. Taban 4,
-///     3 katlik bir alt siranin bir ust siradaki tek odulu gecmemesi icin (3 * 4^k &lt; 4^(k+1)).
+///     Puan: kullanicinin sirasinda (en iyi en ustte, 0'dan i) ilk uyan yazinin agirligi DOGRUSAL n - i + 1 (n = satir
+///     sayisi; varsayilan sirada Currency 10, Threads 9, Item Rarity 8, Unique 7 ... Gold 2); hicbirine uymayan 1.
+///     16.11.2026'ya kadar 4^(n - i) idi: sira her seye baskindi, tek bir Currency 3 katli Unique kombinasyonunu geciyordu.
+///     Kullanicinin istegi: "kombinasyon yapamiyorsak currency'e odaklanmaya gerek yok" - artik kopyayla gelen 3 kat
+///     (ve kopya odulleri) sirada epey yukaridaki tek odulu geciyor (Unique x3 = 21 &gt; Currency x1 = 10).
 /// </summary>
 internal static class FatePlanner
 {
@@ -27,7 +30,6 @@ internal static class FatePlanner
     };
 
     private const int CopyMultiplier = 3;
-    private const double RankBase = 4;
     private const int MaxHand = 12;
 
     private static readonly Regex Progress = new(@"^(\d+)/(\d+) ", RegexOptions.CultureInvariant);
@@ -65,6 +67,32 @@ internal static class FatePlanner
         }
 
         return best;
+    }
+
+    /// <summary>
+    ///     "Select a Fate" panelinde hangi teklif alinmali: her teklif icin el + o kartla Invoke Fates'te yapilabilecek en iyi
+    ///     secim (Best); en yuksek puanli teklif. Esitlikte (teklif plana girmiyorsa hepsi esit) kartin tek basina puani.
+    ///     Ileride gelecek kartlar bilinmiyor: 16.11.2026 canli, uc kazan secim yapilmadan acildiginda ucu de AYNI teklifi
+    ///     gosterdi; sonraki teklif ancak secimden sonra geliyor (ilk secimden sonra 4 kart + altta el).
+    /// </summary>
+    internal static (FateLabels.Card Pick, Plan Plan)? Draft(
+        IReadOnlyList<FateLabels.Card> offers, IReadOnlyList<FateLabels.Card> hand, int picks, IReadOnlyList<string> ranking)
+    {
+        (FateLabels.Card Pick, Plan Plan, double Own)? best = null;
+        var keep = hand.Take(MaxHand - 1).ToList();
+        foreach (var offer in offers)
+        {
+            if (Best(keep.Append(offer).ToList(), picks, ranking) is not { } plan) { continue; }
+
+            var own = Best(new[] { offer }, 1, ranking)?.Score ?? 0;
+            if (best is null || plan.Score > best.Value.Plan.Score + 1e-9 ||
+                (Math.Abs(plan.Score - best.Value.Plan.Score) <= 1e-9 && own > best.Value.Own + 1e-9))
+            {
+                best = (offer, plan, own);
+            }
+        }
+
+        return best is { } b ? (b.Pick, b.Plan) : null;
     }
 
     private static Plan Evaluate(List<FateLabels.Card> chosen, string[] phrases)
@@ -136,7 +164,7 @@ internal static class FatePlanner
         var normal = AltarLabels.Normalize(text);
         for (var i = 0; i < phrases.Length; i++)
         {
-            if (normal.Contains(phrases[i], StringComparison.OrdinalIgnoreCase)) { return Math.Pow(RankBase, phrases.Length - i); }
+            if (normal.Contains(phrases[i], StringComparison.OrdinalIgnoreCase)) { return phrases.Length - i + 1; }
         }
 
         return 1;

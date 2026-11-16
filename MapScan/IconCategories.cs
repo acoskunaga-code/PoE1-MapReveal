@@ -17,8 +17,8 @@ internal static class IconCategories
 
     internal static readonly string[] Order =
     {
-        "Abyss", "Breach", "Essence", "Bestiary", "Incursion", "Delve", "Betrayal", "Synthesis", "Legion", "Blight",
-        "Metamorph", "Delirium", "Harvest", "Heist", "Ritual", "Ultimatum", "Expedition", "Hellscape", "Royale",
+        "Fates (Augury)", "Abyss", "Breach", "Essence", "Bestiary", "Incursion", "Delve", "Betrayal", "Synthesis", "Legion",
+        "Blight", "Metamorph", "Delirium", "Harvest", "Heist", "Ritual", "Ultimatum", "Expedition", "Hellscape", "Royale",
         "Archnemesis", "Altars", "Sentinel", "Lake", "Sanctum", "Crucible", "Ancestral", "Warden",
         "Azmeri / Valdo / Necropolis", "Chayula", "Faridun / Mirage / Descension", "Deepwater / Brinerot",
         "Village / Racetrack / Mercenary / other", "Strongbox", "Corpse / Ore types", "Labyrinth",
@@ -30,6 +30,7 @@ internal static class IconCategories
         (@"^LootFilter", LootFilter),
         (@"^RewardChest", "Reward chests"),
         (@"^Reward", "Reward icons"),
+        (@"^Augury", "Fates (Augury)"),
         (@"^Abyss", "Abyss"),
         (@"^Bestiary", "Bestiary"),
         (@"^Incursion", "Incursion"),

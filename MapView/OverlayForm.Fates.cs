@@ -25,6 +25,10 @@ internal sealed partial class OverlayForm
     private FateLabels.Card[] fateCards = Array.Empty<FateLabels.Card>();
     private Font? fateFont;
 
+    // Panelin Confirm butonu (FateLabels.Buttons) ve bu karedeki ekran kutusu: odul, TAKE ve Best kutulari ona binmiyor.
+    private ulong[] fateButtons = Array.Empty<ulong>();
+    private List<RectangleF> fateButtonRects = new();
+
     // Ayar penceresinin Fates sekmesi: yazilar acik mi, hangi yazilar gecen odul renkli + kutusu cerceveli, hangi renkle.
     // Firca ve kalem butun olarak degistiriliyor, eskisi Dispose edilmiyor (o anda cizimde olabilir).
     private bool fateEnabled = true;
@@ -85,6 +89,7 @@ internal sealed partial class OverlayForm
         {
             if (FateLabels.Scan(h, this.fatePanel) is { } cards)
             {
+                this.fateButtons = cards.Count > 0 ? FateLabels.Buttons(h, this.fatePanel).ToArray() : Array.Empty<ulong>();
                 this.fateCards = cards.ToArray();
                 this.UpdateFatePlan(h, cards);
                 return;
@@ -201,7 +206,14 @@ internal sealed partial class OverlayForm
 
         e.Graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
         var cardRects = placed.Select(p => p.Rect).ToList();
-        var boxes = new List<RectangleF>();
+
+        // Confirm butonu dolu kutu gibi sayiliyor (16.11.2026: eldeki kartin ustune konan odul kutusu butonu kapatiyordu).
+        this.fateButtonRects = this.fateButtons
+            .Select(b => UiFinder.Reread(h, b) is { Visible: true } ? PartsRect(h, new[] { b }, width, height) : null)
+            .OfType<RectangleF>()
+            .Select(r => RectangleF.Inflate(r, 6, 6))
+            .ToList();
+        var boxes = new List<RectangleF>(this.fateButtonRects);
         foreach (var (card, rect, hovered) in placed)
         {
             if (hovered || !this.fateEnabled) { continue; }
@@ -260,10 +272,13 @@ internal sealed partial class OverlayForm
     }
 
     /// <summary>Kartin ekrandaki tam kutusu: govde, ad seridi ve odul simgeleri ogelerinin birlesimi (FateLabels.Card.Parts).</summary>
-    private RectangleF? CardRect(IntPtr h, FateLabels.Card card, int width, int height)
+    private RectangleF? CardRect(IntPtr h, FateLabels.Card card, int width, int height) => PartsRect(h, card.Parts, width, height);
+
+    /// <summary>Ogelerin ekrandaki kutularinin birlesimi; hicbiri okunamazsa null.</summary>
+    private static RectangleF? PartsRect(IntPtr h, IEnumerable<ulong> parts, int width, int height)
     {
         RectangleF? all = null;
-        foreach (var part in card.Parts)
+        foreach (var part in parts)
         {
             if (UiFinder.Reread(h, part) is not { } el || UiFinder.ElementPosition(h, part, width, height) is not { } at) { continue; }
 
@@ -297,6 +312,12 @@ internal sealed partial class OverlayForm
         foreach (var option in options)
         {
             if (screen.Contains(option) && !Collides(option, card, cards, boxes)) { return option; }
+        }
+
+        // Hicbiri bos degilse once butona binmeyen ilk yer (baska bir karta binse de): buton tiklanabilir kalsin.
+        foreach (var option in options)
+        {
+            if (screen.Contains(option) && !this.fateButtonRects.Any(b => b.IntersectsWith(option))) { return option; }
         }
 
         var above = options[0];
