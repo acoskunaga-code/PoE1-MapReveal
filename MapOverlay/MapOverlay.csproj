@@ -52,6 +52,7 @@
     <Compile Include="..\MapView\OverlayForm.FatePlan.cs" Link="Shared\OverlayForm.FatePlan.cs" />
     <Compile Include="..\MapView\OverlayForm.FateDraft.cs" Link="Shared\OverlayForm.FateDraft.cs" />
     <Compile Include="..\MapView\OverlayForm.FateBoss.cs" Link="Shared\OverlayForm.FateBoss.cs" />
+    <Compile Include="..\MapView\OverlayForm.FateChase.cs" Link="Shared\OverlayForm.FateChase.cs" />
     <Compile Include="..\MapView\OverlayForm.GroundUniques.cs" Link="Shared\OverlayForm.GroundUniques.cs" />
     <Compile Include="..\MapView\OverlayForm.UniqueAlerts.cs" Link="Shared\OverlayForm.UniqueAlerts.cs" />
     <Compile Include="..\MapView\OverlayForm.UniqueFrames.cs" Link="Shared\OverlayForm.UniqueFrames.cs" />

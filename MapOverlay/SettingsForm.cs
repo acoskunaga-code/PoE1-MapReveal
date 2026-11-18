@@ -80,6 +80,15 @@ internal sealed partial class SettingsForm : Form
             this.apply();
         };
 
+        // Haritada oyuncunun yerine kirmizi halka + arti; varsayilan kapali.
+        var marker = new CheckBox { AutoSize = true, Location = new Point(260, 19), Text = "Player marker on the map", Checked = this.settings.PlayerMarker };
+        marker.CheckedChanged += (_, _) =>
+        {
+            this.settings.PlayerMarker = marker.Checked;
+            this.apply();
+        };
+        page.Controls.Add(marker);
+
         var monsters = new MonsterPanel(this.settings, this.apply) { Location = new Point(12, 92) };
 
         // Kisayollar (GlobalHotKey): oyun on plandayken de calisiyor. Iki kutuya ayni tus verilemiyor.

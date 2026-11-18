@@ -120,6 +120,9 @@ internal sealed partial class OverlayForm : Form
     /// </summary>
     internal bool HideWhenMapClosed;
 
+    /// <summary>Haritada oyuncunun yerine kirmizi halka + arti (PaintOverlay sonu). Varsayilan kapali.</summary>
+    internal bool ShowPlayerMarker;
+
     private bool mapOpen = true;
 
     /// <summary>Oyunun buyuk haritasi su an acik mi (son okumaya gore) - gunluk icin.</summary>
@@ -1007,6 +1010,9 @@ internal sealed partial class OverlayForm : Form
 
         // Oyuncu isareti. Merkeze degil oyuncunun kendi yerine ciziliyor: harita
         // kaydirildiginda oyuncu merkezde kalmiyor, oyunun kendi haritasinda da oyle.
+        // Varsayilan kapali (kullanici 18.11.2026: "bu isareti kaldirabilirmiyiz"); General sekmesinden acilabiliyor.
+        if (!this.ShowPlayerMarker) { return; }
+
         using var pen = new Pen(Color.FromArgb(220, 255, 90, 60), 2f);
         e.Graphics.DrawEllipse(pen, playerAt.X - 8, playerAt.Y - 8, 16, 16);
         e.Graphics.DrawLine(pen, playerAt.X - 14, playerAt.Y, playerAt.X - 4, playerAt.Y);

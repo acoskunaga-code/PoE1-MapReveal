@@ -1,4 +1,4 @@
-namespace Poe2Map;
+﻿namespace Poe2Map;
 
 /// <summary>
 ///     UI agacinda gezinme: bir ogenin cocuklarini listeler, istenirse alt katmanlara iner.
@@ -13,7 +13,7 @@ internal static class UiKidsCommand
 {
     internal const int SelfOffset = 0xB8;
     internal const int ChildVectorOffset = 0xC0;
-    internal const int ParentOffset = 0x1D8;   // 27.10: 0x1E0; 13.11.2026 `MapScan uiclass canli:B8` 2848 oy
+    internal const int ParentOffset = 0x1E0;   // 27.10: 0x1E0; 13.11.2026: 0x1D8; 19.11.2026 (3.30.0c) `uiclass canli:B8` 2855 oy
     private const int Window = 0x480;
 
     private static ulong moduleBase;

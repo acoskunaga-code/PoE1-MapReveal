@@ -156,6 +156,6 @@ internal static class GroundLabelsCommand
     private static string TextOf(IntPtr h, ulong element)
     {
         var buf = new byte[0x380];
-        return EntityReader.Read(h, element, buf) ? EntityReader.ReadWString(h, buf, 0x358).Replace("\n", " ") : "";
+        return EntityReader.Read(h, element, buf) ? EntityReader.ReadWString(h, buf, AltarLabels.TextOffset).Replace("\n", " ") : "";
     }
 }

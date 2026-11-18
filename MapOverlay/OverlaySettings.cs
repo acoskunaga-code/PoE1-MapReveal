@@ -73,6 +73,9 @@ internal sealed partial class OverlaySettings
                     case FateRewardsKey or FateTextKey or FateTextColorKey or FatePlanKey or FateRankKey:
                         ReadFateLine(settings, key, value);
                         break;
+                    case PlayerMarkerKey:
+                        settings.PlayerMarker = value.Equals("acik", StringComparison.OrdinalIgnoreCase);
+                        break;
                     case DjinnCachesKey:
                         settings.DjinnCaches = !value.Equals("kapali", StringComparison.OrdinalIgnoreCase);
                         break;
@@ -155,6 +158,7 @@ internal sealed partial class OverlaySettings
             this.WriteFateLines(lines);
             this.WritePathLines(lines);
             this.WriteUniqueLines(lines);
+            this.WritePlayerLines(lines);
             this.WriteKeyLines(lines);
 
             File.WriteAllLines(FilePath, lines);

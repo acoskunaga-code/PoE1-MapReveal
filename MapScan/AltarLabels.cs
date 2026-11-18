@@ -22,7 +22,8 @@ internal static class AltarLabels
 {
     // 27.10/12.11: 0x338. 13.11.2026 yamasi: 0x358, canli (14.11.2026 `MapScan uitext Fate`: "Select a Fate", kart adlari ve
     // odul yazilari hep +0x358'de). Statik tahmin 0x360'ti, yanlisti; v3.30 altar etiketlerini o yuzden okuyamiyordu.
-    internal const int TextOffset = 0x358;
+    // 19.11.2026 (3.30.0c): 0x360, canli (`MapScan uitext`: "Lush Hideout", "Guild Stash" ... hep +0x360).
+    internal const int TextOffset = 0x360;
 
     private const int OffSelf = 0xB8;
     private const int OffChildren = 0xC0;

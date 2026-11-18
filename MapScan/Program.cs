@@ -98,6 +98,7 @@ internal static class Program
                 "uniquename" => UniqueNameCheck(args.Skip(1).ToArray()),
                 "uniquetiers" => UniqueTiersCommand.Run(args.Skip(1).ToArray()),
                 "groundlabels" => GroundLabelsCommand.Run(args.Skip(1).ToArray()),
+                "filtertext" => FilterTextCommand.Run(args.Skip(1).ToArray()),
                 "entityrefs" => EntityRefsCommand.Run(args.Skip(1).ToArray()),
                 "buffs" => BuffProbe.Run(args.Skip(1).ToArray()),
                 "buffs-watch" => BuffProbe.Watch(args.Skip(1).ToArray()),

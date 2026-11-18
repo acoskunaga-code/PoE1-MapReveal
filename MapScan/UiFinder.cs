@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace Poe2Map;
@@ -35,16 +35,18 @@ internal static class UiFinder
     // Giris ekraninda CANLI dogrulanan (13.11.2026): self (selfscan), ebeveyn (uiclass canli:B8, 2848 oy), konum
     // (oge (1510, 800)), olcek (her ogede 1.0f), bayraklar, boyut (kok 2560x1600) - `MapScan peek <oge> 2C0`.
     // Kaydirma / varsayilan kaydirma / zoom: eski ve yeni exe'nin kod karsilastirmasindan (statik, oyunda HENUZ sinanmadi).
+    // 19.11.2026 (3.30.0c): ebeveyn / bayraklar / boyut ve sonrasi +8, konum ve olcek yerinde (giris sonrasi canli:
+    // `uiclass canli:B8` ebeveyn +0x1E0 2855 oy; `peek` kok 2560x1600 +0x268, bayrak +0x1E8, konum +0x144 (960, 0)).
     private const int OffSelf = 0xB8;           // 27.10: 0xB8   kendi adresini gosteren alan
-    private const int OffParent = 0x1D8;        // 27.10: 0x1E0
+    private const int OffParent = 0x1E0;        // 27.10: 0x1E0; 13.11: 0x1D8; 19.11 (3.30.0c): 0x1E0 canli
     private const int OffRelative = 0x144;      // 27.10: 0x150  goreli konum (x, y float)
     private const int OffModifier = 0x13C;      // 27.10: 0x148  DOGRULANMADI, konumla birlikte -0xC varsayildi
     private const int OffLocalScale = 0x15C;    // 27.10: 0x168  1.0f olarak okunuyor
-    private const int OffFlags = 0x1E0;         // 27.10: 0x1E8  bit 0x0B gorunur: Tab ile acilip kapaninca degisti
-    private const int OffUnscaledSize = 0x260;  // 27.10: 0x268  kok = 2560x1600
-    private const int OffShift = 0x348;         // 27.10: 0x320  statik: 320->348 (212 ortak kullanim)
-    private const int OffDefaultShift = 0x350;  // 27.10: 0x328  (0, -20); statik: 328->350
-    private const int OffZoom = 0x38C;          // 27.10: 0x364  numpad +/- ile 0.5 -> 1.5; statik: 364->38C
+    private const int OffFlags = 0x1E8;         // 27.10: 0x1E8; 13.11: 0x1E0; 19.11: 0x1E8  bit 0x0B gorunur
+    private const int OffUnscaledSize = 0x268;  // 27.10: 0x268; 13.11: 0x260; 19.11: 0x268  kok = 2560x1600
+    private const int OffShift = 0x350;         // 27.10: 0x320; 13.11: 0x348; 19.11: 0x350
+    private const int OffDefaultShift = 0x358;  // 27.10: 0x328; 13.11: 0x350; 19.11: 0x358  (0, -20)
+    private const int OffZoom = 0x394;          // 27.10: 0x364; 13.11: 0x38C; 19.11: 0x394  numpad +/- 0.5 -> 1.5
 
     /// <summary>
     ///     PoE1'de olcek-indeksi alani bulunamadi; harita zincirindeki butun ogeler yukseklik olcegini (indeks 2,
@@ -372,7 +374,8 @@ internal static class UiFinder
 
     /// <summary>Harita kabinda buyuk harita alt ogesinin isaretci alani: 27.10.2026 0x330; 13.11.2026 yamasindan sonra 0x358
     ///     (alt sinif alanlari +0x28). Canli dogrulandi 13.11.2026 23:15: `MapScan peek &lt;ebeveyn&gt; 3A0` -> +0x358 = oge.</summary>
-    private const int LargeMapSlotInParent = 0x358;
+    // 19.11.2026 (3.30.0c): 0x360, canli (`MapScan peek <ebeveyn> 3A0` -> +0x360 = buyuk harita ogesi).
+    private const int LargeMapSlotInParent = 0x360;
 
     /// <summary>
     ///     Buyuk haritanin parmak izi, aramada VE bulunan ogenin hala gecerli oldugunu sinarken ayni: varsayilan

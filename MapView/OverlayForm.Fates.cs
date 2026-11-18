@@ -255,6 +255,9 @@ internal sealed partial class OverlayForm
         // Ek kampanya bossu cikaran kartlar (OverlayForm.FateBoss.cs); numaralar onlarin ustune.
         PaintBossFates(e.Graphics, placed, font);
 
+        // 3.30.0c'nin yeni degerli odulleri (OverlayForm.FateChase.cs): Divine, Mirror Shard, Fracturing Orb, Hinekora.
+        PaintChaseFates(e.Graphics, placed, font);
+
         // En iyi secim: numaralar ve "Best" kutusu, odul kutularinin yerleri belli olduktan sonra (onlara binmesin).
         this.PaintFatePlan(e.Graphics, placed, boxes, font, height);
     }

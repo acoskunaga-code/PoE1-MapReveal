@@ -37,7 +37,7 @@ internal static class FateLabels
     private const int BodyName = 4;
     private const int BodyRewards = 8;
     private const int RewardText = 3;
-    private const int RowSummaryOffset = 0x328;
+    private const int RowSummaryOffset = 0x330;   // 13.11: 0x328; 19.11.2026: +8 varsayildi (diger alt sinif alanlari gibi), panelde DOGRULANMADI
 
     private static readonly Regex Tags = new(@"<[^>]*>|[{}]", RegexOptions.CultureInvariant);
     private static readonly Regex Progress = new(@"^[0-9]+/[0-9]+ ", RegexOptions.CultureInvariant);

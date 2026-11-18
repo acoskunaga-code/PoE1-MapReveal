@@ -12,7 +12,8 @@ namespace Poe2Map;
 internal static class GroundLabelMap
 {
     internal static readonly int[] ElementPath = { 1, 6 };
-    internal static ulong EntityToLabel = 0x550;
+    // 19.11.2026 (3.30.0c): 0x558 (+8; `peek` kok/1/6: +0x518 / +0x558 iki esleme, 23 kayit, 64 kova).
+    internal static ulong EntityToLabel = 0x558;
 
     /// <summary>WorldItem varligi -> yazi ogesi. <paramref name="wanted"/> verilirse yalniz onlar (hepsi bulununca durur).</summary>
     internal static Dictionary<ulong, ulong> Read(IntPtr h, ulong element, IReadOnlySet<ulong>? wanted = null, int max = 6000)

@@ -133,6 +133,7 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.overlay.SetHiddenPaths(this.settings.HiddenPaths);
         this.overlay.SetWildwood(this.settings.Wildwood);
         this.overlay.SetDjinnCaches(this.settings.DjinnCaches);
+        this.overlay.ShowPlayerMarker = this.settings.PlayerMarker;
         using (var uniqueFont = this.settings.CreateUniqueFont())
         {
             this.overlay.SetGroundUniques(this.settings.ShownUniques, this.settings.PathUniques, uniqueFont, this.settings.UniqueColor);
