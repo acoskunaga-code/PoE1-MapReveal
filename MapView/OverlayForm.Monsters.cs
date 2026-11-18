@@ -96,6 +96,7 @@ internal sealed partial class OverlayForm
             lock (this.entityCache)
             {
                 this.entityCache.Clear();
+                this.nullInfoTries.Clear();
                 this.ResetCacheWatch();
             }
 
@@ -103,6 +104,8 @@ internal sealed partial class OverlayForm
             this.trackedIcons = Array.Empty<MapIconTarget>();
             this.trackedWildwood = Array.Empty<(ulong, WildwoodReader.Marker)>();
             this.trackedCaches = Array.Empty<(ulong, CacheReader.Marker)>();
+            this.trackedUniques = Array.Empty<GroundUnique>();
+            this.uniqueFrameLabels = Array.Empty<ulong>();
 
             // Altar etiket kabi alan degisince yeniden bulunsun (arayuz yeniden kurulabiliyor; OverlayForm.Altars.cs).
             this.altarContainer = 0;
@@ -140,15 +143,18 @@ internal sealed partial class OverlayForm
             var wantMonsters = Array.IndexOf(style.Visible, true) >= 0;
             var wantWildwood = this.wildwood;
             var wantCaches = this.djinnCaches;
+            var wantUniques = this.groundUniques;
 
             // Hepsi kapaliysa varlik listesini gezmeye de gerek yok.
-            if (h == IntPtr.Zero || area == 0 || (!wantMonsters && iconSizes is null && !wantWildwood && !wantCaches) ||
+            if (h == IntPtr.Zero || area == 0 || (!wantMonsters && iconSizes is null && !wantWildwood && !wantCaches && !wantUniques) ||
                 EntityReader.ReadMapHeader(h, area + EntityReader.AwakeMap) is not { } map)
             {
                 this.trackedMonsters = Array.Empty<(ulong, int)>();
                 this.trackedIcons = Array.Empty<MapIconTarget>();
                 this.trackedWildwood = Array.Empty<(ulong, WildwoodReader.Marker)>();
                 this.trackedCaches = Array.Empty<(ulong, CacheReader.Marker)>();
+                this.trackedUniques = Array.Empty<GroundUnique>();
+                this.uniqueFrameLabels = Array.Empty<ulong>();
                 this.RefreshAltars(h, entitiesWalked: false);
                 this.RefreshFates(h);
                 return;
@@ -158,7 +164,7 @@ internal sealed partial class OverlayForm
 
             // Uyuyan liste harita simgeleri ve Wildwood icin (OverlayForm.Icons.cs, OverlayForm.Wildwood.cs): bunlar
             // yerinden oynamiyor. Canavarlarin oradaki konumu bayat, onlar icin kullanilmiyor.
-            var sleeping = (iconSizes is not null || wantWildwood || wantCaches) &&
+            var sleeping = (iconSizes is not null || wantWildwood || wantCaches || wantUniques) &&
                            EntityReader.ReadMapHeader(h, area + EntityReader.SleepingMap) is { } sleepingMap
                 ? EntityReader.WalkMap(h, sleepingMap, 5000)
                 : new List<(uint, ulong)>();
@@ -170,6 +176,8 @@ internal sealed partial class OverlayForm
             var wildwoodRenders = new HashSet<ulong>();
             var foundCaches = new List<(ulong, CacheReader.Marker)>();
             var cacheRenders = new HashSet<ulong>();
+            var foundUniques = new List<GroundUnique>();
+            var uniqueRenders = new HashSet<ulong>();
             var seen = new HashSet<(uint, ulong)>();
 
             lock (this.entityCache)
@@ -193,6 +201,7 @@ internal sealed partial class OverlayForm
                     if (iconSizes is not null) { this.CollectIcon(h, entity, info, iconSizes, foundIcons, iconRenders); }
                     if (wantWildwood) { this.CollectWildwood(h, entity, info, foundWildwood, wildwoodRenders); }
                     if (wantCaches) { this.CollectCache(h, entity, info, foundCaches, cacheRenders); }
+                    if (wantUniques) { this.CollectGroundUnique(h, entity, info, foundUniques, uniqueRenders); }
                 }
 
                 foreach (var (id, entity) in sleeping)
@@ -202,6 +211,7 @@ internal sealed partial class OverlayForm
                     if (iconSizes is not null) { this.CollectIcon(h, entity, info, iconSizes, foundIcons, iconRenders); }
                     if (wantWildwood) { this.CollectWildwood(h, entity, info, foundWildwood, wildwoodRenders); }
                     if (wantCaches) { this.CollectCache(h, entity, info, foundCaches, cacheRenders); }
+                    if (wantUniques) { this.CollectGroundUnique(h, entity, info, foundUniques, uniqueRenders); }
                 }
 
                 if (wantCaches) { this.EndCacheTurn(); }
@@ -212,6 +222,7 @@ internal sealed partial class OverlayForm
                     foreach (var stale in this.entityCache.Keys.Where(k => !seen.Contains(k)).ToList())
                     {
                         this.entityCache.Remove(stale);
+                        this.nullInfoTries.Remove(stale);
                     }
                 }
             }
@@ -220,6 +231,8 @@ internal sealed partial class OverlayForm
             this.trackedIcons = foundIcons.ToArray();
             this.trackedWildwood = foundWildwood.ToArray();
             this.trackedCaches = foundCaches.ToArray();
+            this.trackedUniques = foundUniques.ToArray();
+            this.RefreshUniqueFrames(h);
             this.LogIconSummary(foundIcons);
             this.RefreshAltars(h, entitiesWalked: true);
             this.RefreshFates(h);
@@ -250,9 +263,23 @@ internal sealed partial class OverlayForm
             info = EntityReader.ReadInfo(h, entity);
             this.entityCache[key] = info;
         }
+        else if (info is null)
+        {
+            // Yeni dogan varlik ilk turda yarim kurulu olabiliyor (ReadInfo null); eskiden bu null kalici kaliyordu ve
+            // varlik alan boyunca hic islenmiyordu (18.11.2026: yere geri atilan unique). 8 tur (2 sn) daha deneniyor.
+            var tries = this.nullInfoTries.GetValueOrDefault(key);
+            if (tries < 8)
+            {
+                this.nullInfoTries[key] = tries + 1;
+                info = EntityReader.ReadInfo(h, entity);
+                if (info is not null) { this.entityCache[key] = info; }
+            }
+        }
 
         return info;
     }
+
+    private readonly Dictionary<(uint, ulong), int> nullInfoTries = new();
 
     /// <summary>
     ///     Haritanin donusumuyle canavarlari cizer. PaintOverlay'den, arayuz is

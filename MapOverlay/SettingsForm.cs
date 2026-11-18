@@ -5,7 +5,7 @@ namespace Poe2Map;
 ///     "Icons" (harita simgeleri, <see cref="IconsPanel"/>). Degisiklik aninda haritaya uygulaniyor,
 ///     "Tamam"a basmak gerekmiyor; pencere kapaninca diske yaziliyor.
 /// </summary>
-internal sealed class SettingsForm : Form
+internal sealed partial class SettingsForm : Form
 {
     private readonly OverlaySettings settings;
     private readonly Action apply;
@@ -45,9 +45,13 @@ internal sealed class SettingsForm : Form
         var paths = new TabPage("Paths") { UseVisualStyleBackColor = true };
         paths.Controls.Add(new PathPanel(this.settings, this.apply) { Dock = DockStyle.Fill });
         tabs.TabPages.Add(paths);
+
+        // Yerdeki unique'ler (SettingsForm.Uniques.cs): filtre gruplarina gore, ad / yol kutulari, yazi tipi ve renk.
+        tabs.TabPages.Add(this.BuildUniquesTab());
         this.Controls.Add(tabs);
 
-        this.ClientSize = new Size(500, 560);
+        // 600: Uniques sekmesinde grup basliklari ("Your filter rule 1: Leather Belt, Heavy Belt, Paua Amulet") sigsin.
+        this.ClientSize = new Size(600, 600);
         this.FormClosed += (_, _) => this.settings.Save();
     }
 

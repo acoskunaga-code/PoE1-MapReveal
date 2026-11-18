@@ -41,6 +41,8 @@
     <Compile Include="..\MapView\OverlayForm.cs" Link="Shared\OverlayForm.cs" />
     <Compile Include="..\MapView\OverlayForm.Monsters.cs" Link="Shared\OverlayForm.Monsters.cs" />
     <Compile Include="..\MapView\OverlayForm.Paths.cs" Link="Shared\OverlayForm.Paths.cs" />
+    <Compile Include="..\MapView\OverlayForm.LiveTerrain.cs" Link="Shared\OverlayForm.LiveTerrain.cs" />
+    <Compile Include="..\MapView\OverlayForm.Barriers.cs" Link="Shared\OverlayForm.Barriers.cs" />
     <Compile Include="..\MapView\OverlayForm.Icons.cs" Link="Shared\OverlayForm.Icons.cs" />
     <Compile Include="..\MapScan\MapIconReader.cs" Link="Shared\MapIconReader.cs" />
     <Compile Include="..\MapView\OverlayForm.Altars.cs" Link="Shared\OverlayForm.Altars.cs" />
@@ -49,6 +51,14 @@
     <Compile Include="..\MapView\OverlayForm.Fates.cs" Link="Shared\OverlayForm.Fates.cs" />
     <Compile Include="..\MapView\OverlayForm.FatePlan.cs" Link="Shared\OverlayForm.FatePlan.cs" />
     <Compile Include="..\MapView\OverlayForm.FateDraft.cs" Link="Shared\OverlayForm.FateDraft.cs" />
+    <Compile Include="..\MapView\OverlayForm.FateBoss.cs" Link="Shared\OverlayForm.FateBoss.cs" />
+    <Compile Include="..\MapView\OverlayForm.GroundUniques.cs" Link="Shared\OverlayForm.GroundUniques.cs" />
+    <Compile Include="..\MapView\OverlayForm.UniqueAlerts.cs" Link="Shared\OverlayForm.UniqueAlerts.cs" />
+    <Compile Include="..\MapView\OverlayForm.UniqueFrames.cs" Link="Shared\OverlayForm.UniqueFrames.cs" />
+    <Compile Include="..\MapScan\GroundLabelMap.cs" Link="Shared\GroundLabelMap.cs" />
+    <Compile Include="..\MapScan\GroundUniqueReader.cs" Link="Shared\GroundUniqueReader.cs" />
+    <Compile Include="..\MapScan\UniqueArt.cs" Link="Shared\UniqueArt.cs" />
+    <Compile Include="..\MapScan\UniqueTierBuilder.cs" Link="Shared\UniqueTierBuilder.cs" />
     <Compile Include="..\MapScan\FatePlanner.cs" Link="Shared\FatePlanner.cs" />
     <Compile Include="..\MapView\OverlayForm.Wildwood.cs" Link="Shared\OverlayForm.Wildwood.cs" />
     <Compile Include="..\MapScan\WildwoodReader.cs" Link="Shared\WildwoodReader.cs" />
@@ -74,6 +84,10 @@
     <!-- Ayar penceresinin Icons sekmesi: ucuncu taraf simge verisi, isteye bagli (data/README.md). -->
     <None Include="..\data\icons\catalog.txt" Link="data\icons\catalog.txt" Condition="Exists('..\data\icons\catalog.txt')" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\data\icons\Icons.png" Link="data\icons\Icons.png" Condition="Exists('..\data\icons\Icons.png')" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Yerdeki unique'lerin adi: RePoE uniques.json, isteye bagli (data/README.md). -->
+    <None Include="..\data\uniques.json" Link="data\uniques.json" Condition="Exists('..\data\uniques.json')" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Uniques sekmesinin listesi: MapScan uniquetiers ile filtreden + poewiki'den uretilir, isteye bagli. -->
+    <None Include="..\data\unique-tiers.txt" Link="data\unique-tiers.txt" Condition="Exists('..\data\unique-tiers.txt')" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="..\MapScan\EntityReader.cs" Link="Shared\EntityReader.cs" />
     <Compile Include="..\MapScan\LocalPlayer.cs" Link="Shared\LocalPlayer.cs" />
     <Compile Include="..\MapView\Player.cs" Link="Shared\Player.cs" />

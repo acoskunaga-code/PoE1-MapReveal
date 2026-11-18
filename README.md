@@ -18,10 +18,11 @@
 
 - 🗺️ **Whole map on entry** — the explored *and* unexplored layout, lined up with the game's own large map as you zoom and pan.
 - 👹 **Monsters by rarity** — 🔴 normal · 🔵 magic · 🟡 rare · 🟤 unique. Each rarity can be switched off or resized.
-- 🚪 **Exit paths** — a coloured route from you to every exit, labelled with where it leads. Pick which exits are shown at all (Settings → Paths, with a search box); an unticked exit loses its route, marker and name.
+- 🚪 **Exit paths** — a coloured route from you to every exit, labelled with where it leads. Pick which exits are shown at all (Settings → Paths, with a search box); an unticked exit loses its route, marker and name. Routes follow doors and barriers that open and close (e.g. the Breach Hive arms).
+- 💎 **Uniques on the ground** — knows which unique dropped even while it is unidentified (a Heavy Belt can be *Mageblood*). For each unique you choose: its name on the map, a route to it, its name in big letters on the screen, and/or a frame around the game's own item label with a line from you to it. All off by default; the list groups uniques the way your loot filter does (Settings → Uniques → Build list).
 - 📍 **Map icons** — shrines, strongboxes, essences, NPCs, Fate cauldrons and more, with their names. Opened strongboxes and taken shrines disappear. Size per icon, searchable list.
 - 🔮 **Eldritch altars** — every "Player gains" choice framed, plus a gold frame for any text you type (e.g. *Divine Orb*). Colours are yours to pick.
-- 🪶 **Fates (Covens)** — the moment the "Select a Fate" panel opens, each card shows what its small round reward icons say, written above the card. No need to hover them one by one. Rewards that contain a word you type (e.g. *Rare Rings*) are coloured and their card's box is framed. On each "Select a Fate" pick a green **TAKE** marks the card that leads to the best combination with the cards you already hold, and offered cards with the same name as one in your hand get a gold **COPY** frame. On the "Invoke Fates" panel the best cards get numbers in the order to click them. Both follow your own reward list (Settings → Fates; can be switched off). Nothing is drawn over the Confirm button.
+- 🪶 **Fates (Covens)** — the moment the "Select a Fate" panel opens, each card shows what its small round reward icons say, written above the card. No need to hover them one by one. Rewards that contain a word you type (e.g. *Rare Rings*) are coloured and their card's box is framed. On each "Select a Fate" pick a green **TAKE** marks the card that leads to the best combination with the cards you already hold, and offered cards with the same name as one in your hand get a gold **COPY** frame. On the "Invoke Fates" panel the best cards get numbers in the order to click them. Both follow your own reward list (Settings → Fates; can be switched off). Cards that spawn an extra campaign boss (Savage, Pestilent, Sadist) are marked **+ CAMPAIGN BOSS**. Nothing is drawn over the Confirm button.
 - 🏺 **Djinn's Caches** — marked on the map with their metal and contents (Settings → Altars; can be switched off).
 - 🌿 **The Viridian Wildwood** — wisps by colour and size, fuel orbs, altars and Nameless Shrines.
 - ⌨️ **Hotkeys** — one key hides the whole overlay (default **F9**), another hides only the exit paths (default **F10**). Both can be changed.
@@ -34,7 +35,7 @@
 2. Start Path of Exile and enter an area.
 3. Run `BunuYazanTosun.exe` — a tray icon appears.
 4. Press **Tab** to open the large map. The overlay is drawn on top of it.
-5. Tray icon → **Settings** for line colour, monster icons, hotkeys (General), map icons (Icons), altar frames (Altars), Fate rewards (Fates) and exit paths (Paths).
+5. Tray icon → **Settings** for line colour, monster icons, hotkeys (General), map icons (Icons), altar frames (Altars), Fate rewards (Fates), exit paths (Paths) and uniques (Uniques).
 
 Everything it writes (settings, log, downloaded icons) stays in a `data` folder next to the exe — nothing in AppData, no registry, no installer. Delete the folder to reset. (If the exe sits in a write-protected folder such as Program Files, it falls back to `%LOCALAPPDATA%\poe1-map`.) Files of older versions are moved there on first start. The log is capped at about 2 MB.
 
@@ -58,7 +59,7 @@ dotnet build MapOverlay/MapOverlay.csproj -c Release
 - **MapView** — development / calibration tool
 - **MapScan** — memory diagnostics used to find the offsets
 
-Far-exit detection and names use an optional list that is not shipped here, see [`data/README.md`](data/README.md). The overlay runs without it; some far exits are then missed or labelled generically. Map icon pictures are not shipped either: the overlay downloads them by itself on first start (about 9 MB from GitHub, nothing to copy by hand; details in the same file).
+Far-exit detection and names use an optional list that is not shipped here, see [`data/README.md`](data/README.md). The overlay runs without it; some far exits are then missed or labelled generically. Map icon pictures are not shipped either: the overlay downloads them by itself on first start (about 9 MB from GitHub, nothing to copy by hand; details in the same file). The unique list and unique names are built on your own PC with the **Build list** button (poewiki and RePoE data, same file).
 
 ## ⚠️ Disclaimer
 

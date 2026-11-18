@@ -19,6 +19,8 @@ son_kalibrasyon.txt
 data/radar-targets.json
 data/important_tgt_files.txt
 data/icons/
+data/uniques.json
+data/unique-tiers.txt
 
 # OS
 Thumbs.db

@@ -899,6 +899,8 @@ internal sealed partial class OverlayForm : Form
             // Altar kutulari ve Fate yazilari haritadan bagimsiz: buyuk harita kapaliyken de (OverlayForm.Altars.cs, .Fates.cs).
             this.PaintAltars(e);
             this.PaintFates(e);
+            this.PaintUniqueFrames(e);
+            this.PaintUniqueAlerts(e);
             this.PaintNotice(e);
         }
         catch (Exception ex)
@@ -973,6 +975,8 @@ internal sealed partial class OverlayForm : Form
         var playerPts = new[] { new PointF(p.CellX + this.MapOffsetX, p.CellY + this.MapOffsetY) };
         m.TransformPoints(playerPts);
         var playerAt = playerPts[0];
+        this.playerScreen = playerAt;
+        this.playerScreenTick = Environment.TickCount64;
 
         e.Graphics.SmoothingMode = SmoothingMode.None;
         e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
@@ -990,6 +994,7 @@ internal sealed partial class OverlayForm : Form
         this.PaintMonsters(e, m);
         this.PaintMapIcons(e, m);
         this.PaintCaches(e, m);
+        this.PaintGroundUniques(e, m);
 
             if (this.calibrating)
             {

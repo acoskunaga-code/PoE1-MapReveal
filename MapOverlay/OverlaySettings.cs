@@ -88,6 +88,9 @@ internal sealed partial class OverlaySettings
                     case var icon when icon.StartsWith("icon.", StringComparison.Ordinal):
                         ReadIconLine(settings, icon["icon.".Length..], value);
                         break;
+                    case var unique when unique.StartsWith("unique-", StringComparison.Ordinal):
+                        ReadUniqueLine(settings, unique, value);
+                        break;
                     default:
                         ReadMonsterLine(settings, key, value);
                         break;
@@ -151,6 +154,7 @@ internal sealed partial class OverlaySettings
             this.WriteAltarLines(lines);
             this.WriteFateLines(lines);
             this.WritePathLines(lines);
+            this.WriteUniqueLines(lines);
             this.WriteKeyLines(lines);
 
             File.WriteAllLines(FilePath, lines);

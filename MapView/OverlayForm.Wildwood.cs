@@ -35,10 +35,12 @@ internal sealed partial class OverlayForm
     private void CollectWildwood(
         IntPtr h, ulong entity, EntityReader.EntityInfo info, List<(ulong, WildwoodReader.Marker)> into, HashSet<ulong> done)
     {
-        if (info.Wildwood is null && info.WildwoodTries < 5)
+        // Classify yalnizca animasyon varligi henuz yuklenmemis wisp icin null donuyor. Vazgecmiyoruz: ilk 8 tur her
+        // turda, sonra 4 turda bir (saniyede bir). Eskiden 5 denemeden (1,25 sn) sonra o wisp bir daha hic cizilmiyordu.
+        if (info.Wildwood is null)
         {
             info.WildwoodTries++;
-            info.Wildwood = WildwoodReader.Classify(h, info);
+            if (info.WildwoodTries <= 8 || info.WildwoodTries % 4 == 0) { info.Wildwood = WildwoodReader.Classify(h, info); }
         }
 
         if (info.Wildwood is not { Kind: not WildwoodReader.Kind.None } marker) { return; }

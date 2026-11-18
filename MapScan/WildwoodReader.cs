@@ -58,10 +58,10 @@ internal static class WildwoodReader
             if (!info.Components.TryGetValue("Animated", out var animated)) { return NotWildwood; }
 
             var ao = PlayerChain.ReadPointer(h, animated + AnimatedObject);
-            if (EntityReader.ReadInfo(h, ao) is not { } aoInfo) { return null; }
+            if (AnimationPath(h, ao) is not { } aoPath) { return null; }
 
-            var m = Wisp.Match(aoInfo.Path);
-            if (!m.Success) { return new Marker(Kind.Other, 0, Tail(aoInfo.Path)); }
+            var m = Wisp.Match(aoPath);
+            if (!m.Success) { return new Marker(Kind.Other, 0, Tail(aoPath)); }
 
             var kind = m.Groups["kind"].Value.ToLowerInvariant() switch
             {
@@ -80,6 +80,25 @@ internal static class WildwoodReader
         if (path.Contains("Altar", StringComparison.Ordinal)) { return new Marker(Kind.Altar, 0, name.Length > 0 ? name : Tail(path)); }
 
         return new Marker(Kind.Other, 0, name.Length > 0 ? name : Tail(path));
+    }
+
+    /// <summary>
+    ///     Animasyon varliginin yolu: +0x08 details -> +0x08 yol. EntityReader.ReadInfo kullanilmiyor: 18.11.2026 canli
+    ///     (`MapScan wispao`) animasyon varliklarinin +0x8C bayragi 0x71/0x72 (bit 0 dolu) ve ReadInfo bunu gecersiz
+    ///     varlik sayip reddediyordu; bir Wildwood'da 209 wisp'in hicbiri cizilmedi. Yol, 3500 birim uzaktaki uyuyan
+    ///     wisp'te bile tam okunuyor.
+    /// </summary>
+    private static string? AnimationPath(IntPtr h, ulong ao)
+    {
+        var head = new byte[0x10];
+        if (!EntityReader.Read(h, ao, head)) { return null; }
+
+        var details = BitConverter.ToUInt64(head, 0x08);
+        var d = new byte[0x30];
+        if (!PlayerChain.LooksLikePointer(details) || !EntityReader.Read(h, details, d)) { return null; }
+
+        var path = EntityReader.ReadWString(h, d, 0x08);
+        return path.StartsWith("Metadata/", StringComparison.Ordinal) ? path : null;
     }
 
     /// <summary>"Metadata/.../AzmeriFuelResupply" -> "AzmeriFuelResupply".</summary>

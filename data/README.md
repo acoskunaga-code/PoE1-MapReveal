@@ -95,3 +95,44 @@ are listed but have no picture.
 The Icons tab shows a short note instead of the list and no icons are drawn on
 the map; paths, monsters and everything else work as usual. The sizes
 are stored in the settings file as `icon.<Name> = <pixels>` (0 or no line = off).
+
+# Uniques on the ground
+
+The overlay knows which unique an item on the ground is, also while it is
+unidentified (an unidentified Heavy Belt can be "Mageblood"): the game keeps the
+unique's own picture on the item. Settings → **Uniques** lists every unique; for
+each one you choose what happens when it drops:
+
+- **Show** – its name next to its dot on the map
+- **Path** – a route to it on the map
+- **Alert** – its name in big letters at the top of the screen
+- **Frame** – the game's own label of the item framed, with a line from you to it
+
+All of them start switched off. Font, colour and alert size are set once for all
+uniques.
+
+## Building the list (nothing to copy by hand)
+
+The list and the picture names are third-party data and are **not** shipped in
+this repository or the release zip. Press **Build list...** in the Uniques tab
+(needs internet, a few seconds). It writes two files into the `data` folder next
+to the exe:
+
+- `data/unique-tiers.txt` – every droppable unique with its base type, from the
+  [poewiki](https://www.poewiki.net) Cargo API. If you choose your loot filter
+  (`.filter` file), the uniques are grouped the way that filter treats them, in
+  filter order (S tier, A tier, ..., rules you added in FilterBlade, ...);
+  otherwise they are grouped by item type. Press **Rebuild list...** after you
+  change your filter. Your ticks are kept (they are stored by unique name).
+- `data/uniques.json` – `uniques.json` of [RePoE](https://github.com/lvlvllvlvllvlvl/RePoE)
+  (`https://repoe-fork.github.io/uniques.json`, generated from the game files):
+  each unique's name and picture. Downloaded only if it is missing; delete it to
+  get a fresh copy after a league launch.
+
+Without `uniques.json` the name is made from the picture's file name
+("PyroshockClasp" -> "Pyroshock Clasp"); a few pictures are not named after their
+unique and are known to the program (Mageblood, Meginord's Girdle). Uniques that
+share one picture are shown together ("Headhunter / Replica Headhunter").
+
+Developers: `MapScan uniquetiers <your.filter | -> <output>` builds the same list
+from the command line.

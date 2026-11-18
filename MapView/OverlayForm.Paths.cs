@@ -64,6 +64,7 @@ internal sealed partial class OverlayForm
 
     private readonly Dictionary<(uint, ulong), EntityReader.EntityInfo?> exitCache = new();
     private readonly Dictionary<string, Color> exitColors = new(StringComparer.Ordinal);
+    private readonly Dictionary<uint, ExitFinder.Exit> seenEntityExits = new();
     private System.Threading.Timer? pathTimer;
     private PathTarget[] pathTargets = Array.Empty<PathTarget>();
     private const bool TileGuessedExits = true;
@@ -114,6 +115,9 @@ internal sealed partial class OverlayForm
             if (area != this.pathArea)
             {
                 this.exitCache.Clear();
+                this.seenEntityExits.Clear();
+                this.ResetLiveTerrain();
+                this.ResetBarriers();
                 this.exitColors.Clear();
                 this.pathTargets = Array.Empty<PathTarget>();
                 this.tileTargets = null;
@@ -159,13 +163,33 @@ internal sealed partial class OverlayForm
             }
 
             var doors = new List<(float X, float Y)>();
-            var entities = ExitFinder.Find(h, area, this.exitCache, doors);
-            var exits = TileExits.WithEntities(this.tileTargets, entities);
+            var barriers = new List<ExitFinder.Barrier>();
+            var entities = ExitFinder.Find(h, area, this.exitCache, doors, barriers);
+
+            // Bir kez gorulen kapi varligi alan boyunca hatirlaniyor: oyun bazi gecisleri (17.11.2026: Dunes'taki
+            // "Hive Fortress", kuledeki "Dunes") yalnizca yakindayken gonderiyor; uzaklasinca yol kayboluyor, adi da
+            // karodaki genel "entrance"a donuyordu.
+            foreach (var e in entities) { this.seenEntityExits[e.Id] = e; }
+            var exits = TileExits.WithEntities(this.tileTargets, this.seenEntityExits.Values.ToList());
+
+            // Uniques sekmesinde "Path" isaretli, yerde duran unique'ler de hedef (OverlayForm.GroundUniques.cs).
+            exits.AddRange(this.UniquePathTargets(h));
 
             var rebuildAll = false;
+            raw = this.RouteTerrain(h, area, raw, bytesPerRow, gridX, gridY, out var terrainChanged);
+            var barriersChanged = this.UpdateBarriers(barriers, raw, bytesPerRow, gridX, gridY);
+            var routeGrid = this.WithBarriers(raw, bytesPerRow, gridX);
+            if (terrainChanged || barriersChanged)
+            {
+                this.costGrid = null;
+                this.MarkWallsDirty();
+            }
+
+            this.MaybeRedrawWalls(area, routeGrid, bytesPerRow, gridX, gridY);
+
             if (this.costGrid is null || doors.Count != this.doorCount)
             {
-                this.costGrid = FlowField.BuildCostGrid(raw, bytesPerRow, gridX, gridY, doors, out this.costWidth, out this.costHeight);
+                this.costGrid = FlowField.BuildCostGrid(routeGrid, bytesPerRow, gridX, gridY, doors, out this.costWidth, out this.costHeight);
                 this.doorCount = doors.Count;
                 rebuildAll = true;
             }
@@ -175,8 +199,11 @@ internal sealed partial class OverlayForm
 
             foreach (var exit in exits)
             {
-                // Renk anahtara bagli: yeni bir cikis eklenince eskilerin rengi degismesin.
-                if (!this.exitColors.TryGetValue(exit.Key, out var color))
+                // Renk anahtara bagli: yeni bir cikis eklenince eskilerin rengi degismesin. Unique yolu unique adinin renginde.
+                var unique = exit.Key.StartsWith(UniqueKeyPrefix, StringComparison.Ordinal);
+                Color color;
+                if (unique) { color = this.groundUniqueText.Color; }
+                else if (!this.exitColors.TryGetValue(exit.Key, out color))
                 {
                     color = ExitColors[this.exitColors.Count % ExitColors.Length];
                     this.exitColors[exit.Key] = color;
@@ -184,7 +211,7 @@ internal sealed partial class OverlayForm
 
                 var reuse = rebuildAll
                     ? null
-                    : previous.FirstOrDefault(t => t.Exit.Key == exit.Key && t.Exit.X == exit.X && t.Exit.Y == exit.Y);
+                    : previous.FirstOrDefault(t => t.Exit.Key == exit.Key && t.Exit.X == exit.X && t.Exit.Y == exit.Y && t.Pen.Color == color);
 
                 next.Add(reuse ?? new PathTarget
                 {
@@ -244,7 +271,9 @@ internal sealed partial class OverlayForm
 
     private void ReportExitNames(List<PathTarget> targets)
     {
-        var names = targets.Select(t => t.Exit.Name).Where(n => n.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        // Unique hedefleri Paths sekmesinin cikis listesine girmesin (onlarin ayari Uniques sekmesinde).
+        var names = targets.Where(t => !t.Exit.Key.StartsWith(UniqueKeyPrefix, StringComparison.Ordinal))
+            .Select(t => t.Exit.Name).Where(n => n.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var key = string.Join("|", names);
         if (key == this.reportedExitNames) { return; }
 
@@ -270,6 +299,10 @@ internal sealed partial class OverlayForm
             // Paths sekmesinde kapatilan cikis: yol da, isaret de, ad da yok (16.11.2026 kullanicinin istegi; eskiden
             // isaret ve ad kaliyordu).
             if (hidden.Contains(target.Exit.Name)) { continue; }
+
+            // Unique hedefi: alindiysa ya da yolu artik istenmiyorsa bir sonraki hesabi beklemeden cizme.
+            var unique = target.Exit.Key.StartsWith(UniqueKeyPrefix, StringComparison.Ordinal);
+            if (unique && (!this.UniqueHasPath(target.Exit.Name) || !this.UniqueStillThere(target.Exit.Key))) { continue; }
 
             var ex = (target.Exit.X - player.X) / PlayerPos.UnitsPerCell;
             var ey = (target.Exit.Y - player.Y) / PlayerPos.UnitsPerCell;
@@ -308,6 +341,9 @@ internal sealed partial class OverlayForm
                     e.Graphics.DrawLines(target.Pen, points);
                 }
             }
+
+            // Unique'in noktasi ve adi PaintGroundUniques'te.
+            if (unique) { continue; }
 
             // Cikisin yeri: kucuk dolu kare ve gittigi yer. Yol cizilmese de gorunsun.
             var marker = new[]

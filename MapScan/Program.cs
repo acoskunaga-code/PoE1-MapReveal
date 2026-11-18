@@ -89,6 +89,15 @@ internal static class Program
                 "chests" => ChestStateCommand.Run(args.Skip(1).ToArray()),
                 "paths" => EntityPathsCommand.Run(args.Skip(1).ToArray()),
                 "comps" => ComponentsCommand.Run(args.Skip(1).ToArray()),
+                "blockages" => BlockagesCommand.Run(args.Skip(1).ToArray()),
+                "routeimg" => RouteImageCommand.Run(args.Skip(1).ToArray()),
+                "entsnap" => EntitySnapshotCommand.Run(args.Skip(1).ToArray()),
+                "wisps" => WispsCommand.Run(args.Skip(1).ToArray()),
+                "wispao" => WispAoCommand.Run(args.Skip(1).ToArray()),
+                "grounditems" => GroundItemsCommand.Run(args.Skip(1).ToArray()),
+                "uniquename" => UniqueNameCheck(args.Skip(1).ToArray()),
+                "uniquetiers" => UniqueTiersCommand.Run(args.Skip(1).ToArray()),
+                "groundlabels" => GroundLabelsCommand.Run(args.Skip(1).ToArray()),
                 "entityrefs" => EntityRefsCommand.Run(args.Skip(1).ToArray()),
                 "buffs" => BuffProbe.Run(args.Skip(1).ToArray()),
                 "buffs-watch" => BuffProbe.Watch(args.Skip(1).ToArray()),
@@ -128,6 +137,18 @@ internal static class Program
             Console.Error.WriteLine("HATA: " + ex.Message);
             return 1;
         }
+    }
+
+    /// <summary>uniquename &lt;resim...&gt;: overlay'in yerdeki unique'e yazacagi ad (data\uniques.json + resim adi).</summary>
+    private static int UniqueNameCheck(string[] arts)
+    {
+        UniqueArt.Log = (m, ex) => Console.WriteLine(ex is null ? m : $"{m}: {ex.Message}");
+        foreach (var art in arts)
+        {
+            Console.WriteLine($"{art} -> {UniqueArt.Names(art) ?? GroundUniqueReader.NameFromArt(art)}");
+        }
+
+        return 0;
     }
 
     private static int Usage()

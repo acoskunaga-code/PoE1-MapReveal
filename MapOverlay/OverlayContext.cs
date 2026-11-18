@@ -115,6 +115,7 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.timer.Interval = 250;
         this.timer.Tick += (_, _) => this.Tick();
         this.timer.Start();
+        this.OpenSettingsFromArgs();
     }
 
     private void ApplySettings()
@@ -132,6 +133,12 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.overlay.SetHiddenPaths(this.settings.HiddenPaths);
         this.overlay.SetWildwood(this.settings.Wildwood);
         this.overlay.SetDjinnCaches(this.settings.DjinnCaches);
+        using (var uniqueFont = this.settings.CreateUniqueFont())
+        {
+            this.overlay.SetGroundUniques(this.settings.ShownUniques, this.settings.PathUniques, uniqueFont, this.settings.UniqueColor);
+            this.overlay.SetUniqueAlerts(this.settings.AlertUniques, this.settings.UniqueAlertSize);
+            this.overlay.SetUniqueFrames(this.settings.FrameUniques);
+        }
 
         RegisterKey(this.toggleKey, this.settings.ToggleKey, "acma/kapama tusu");
         RegisterKey(this.pathKey, this.settings.PathKey, "yol tusu");
@@ -165,7 +172,7 @@ internal sealed partial class OverlayContext : ApplicationContext
 
         CrashLog.Write($"overlay {(this.overlay.Paused ? "kapatildi" : "acildi")} (tus {GlobalHotKey.Describe(this.settings.ToggleKey)})", null);
     }
-    private void OpenSettings()
+    private void OpenSettings(string? tab = null)
     {
         if (this.settingsForm is { IsDisposed: false })
         {
@@ -180,6 +187,15 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.overlay.PanelOpen = true;
         this.settingsForm.FormClosed += (_, _) => this.overlay.PanelOpen = false;
         this.settingsForm.Show();
+        if (tab is not null) { this.settingsForm.SelectTab(tab); }
+    }
+
+    /// <summary>"--settings [sekme]" ile baslatilinca ayar penceresi hemen acilir (gelistirme: sekmeyi elle acmadan denemek).</summary>
+    private void OpenSettingsFromArgs()
+    {
+        var args = Environment.GetCommandLineArgs();
+        var at = Array.FindIndex(args, a => a.Equals("--settings", StringComparison.OrdinalIgnoreCase));
+        if (at > 0) { this.OpenSettings(at + 1 < args.Length ? args[at + 1] : null); }
     }
 
     /// <summary>

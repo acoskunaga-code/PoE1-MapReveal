@@ -61,6 +61,10 @@ internal static class EntityReader
         // Djinn's Cache isareti (CacheReader.Classify): null = henuz belirlenmedi. Yoldan, bir kez.
         internal CacheReader.Marker? Cache;
 
+        // Yerdeki unique'in adi (GroundUniqueReader.Classify): null = henuz okunamadi, "" = unique yer esyasi degil.
+        internal string? GroundUnique;
+        internal int GroundUniqueTries;
+
         internal bool IsMonster => this.Path.StartsWith("Metadata/Monsters/", StringComparison.Ordinal);
     }
 

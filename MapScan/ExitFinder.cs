@@ -16,6 +16,15 @@ internal static class ExitFinder
 {
     internal readonly record struct Exit(uint Id, string Name, float X, float Y);
 
+    /// <summary>Lig engeli (IsLeagueBarrier) ve kapali olup olmadigi.</summary>
+    internal readonly record struct Barrier(uint Id, float X, float Y, bool Closed);
+
+    /// <summary>
+    ///     TriggerableBlockage +0x30: 01 kapali, 00 acik. 17.11.2026 canli (`MapScan blockages izle`, Hive Fortress):
+    ///     kol 01->00 dondugu anda cevresindeki zemin acildi; kapali engellerin ortasi zeminde 0, acik olanlarinki 5.
+    /// </summary>
+    internal const ulong BlockageClosed = 0x30;
+
     /// <summary>
     ///     Iki listedeki cikislari ve kapilari dondurur. Kapilar yol bulma icin: zeminde
     ///     kapali gorunen ama acilan gecitler (Radar'daki gibi TriggerableBlockage bileseni
@@ -25,9 +34,10 @@ internal static class ExitFinder
     /// </summary>
     internal static List<Exit> Find(
         IntPtr h, ulong area, Dictionary<(uint, ulong), EntityReader.EntityInfo?> cache,
-        List<(float X, float Y)>? doors = null)
+        List<(float X, float Y)>? doors = null, List<Barrier>? barriers = null)
     {
         var exits = new List<Exit>();
+        var state = new byte[1];
 
         foreach (var offset in new[] { EntityReader.AwakeMap, EntityReader.SleepingMap })
         {
@@ -45,16 +55,24 @@ internal static class ExitFinder
                 if (info is null) { continue; }
 
                 var isExit = info.Components.ContainsKey("AreaTransition");
-                var isDoor = doors is not null &&
+                var isDoor = doors is not null && !IsLeagueBarrier(info.Path) &&
                              (info.Components.ContainsKey("TriggerableBlockage") ||
                               info.Path.Contains("Door", StringComparison.OrdinalIgnoreCase));
-                if (!isExit && !isDoor) { continue; }
+                var block = 0UL;
+                var isBarrier = barriers is not null && IsLeagueBarrier(info.Path) &&
+                                info.Components.TryGetValue("TriggerableBlockage", out block);
+                if (!isExit && !isDoor && !isBarrier) { continue; }
 
                 if (!info.Components.TryGetValue("Render", out var render)) { continue; }
                 if (!EntityReader.OwnedBy(h, render, entity)) { continue; }
                 if (LocalPlayer.ReadPosition(h, render) is not { } p) { continue; }
 
                 if (isDoor) { doors!.Add((p.X, p.Y)); }
+                if (isBarrier && EntityReader.Read(h, block + BlockageClosed, state) && state[0] <= 1)
+                {
+                    barriers!.Add(new Barrier(id, p.X, p.Y, state[0] == 1));
+                }
+
                 if (isExit) { exits.Add(new Exit(id, DisplayName(h, render, info.Path), p.X, p.Y)); }
             }
         }
@@ -62,6 +80,18 @@ internal static class ExitFinder
         // Ayni kapi iki listede birden gorunebilir; varlik numarasiyla tekillestiriyoruz.
         return exits.GroupBy(e => e.Id).Select(g => g.First()).ToList();
     }
+
+    /// <summary>
+    ///     Kapi sayilmayan engeller: Breach kulesinin kollari (BreachTower_ArmBlockage/Core) ve haritaya dizili
+    ///     BrequelBlocker duvarlari. 17.11.2026 canli (Dunes, Hive Fortress; `MapScan blockages izle`): bunlar etkinlik
+    ///     boyunca acilip kapaniyor (TriggerableBlockage +0x30: 01 kapali, 00 acik) ve oyun her degisimde zemin izgarasini
+    ///     KENDISI guncelliyor (kol acilinca cevresinde 456 hucre degisti). Kapi gibi zorla acilinca yol kapali kollardan ve
+    ///     duvar dizilerinden geciyordu (bir haritada 306 tane); dogru durum guncel zeminden geliyor (OverlayForm.LiveTerrain).
+    ///     Ama oyun kapali engeli zemine yalnizca ag balonundayken yaziyor: uzaktakiler OverlayForm.Barriers'ta hatirlaniyor.
+    /// </summary>
+    private static bool IsLeagueBarrier(string path) =>
+        path.Contains("/Leagues/Breach/", StringComparison.OrdinalIgnoreCase) ||
+        path.Contains("Brequel", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     ///     Kapinin oyundaki gorunen adi: Render bileseninin Name alani, gecis kapilarinda gidilen alanin adi.
