@@ -26,7 +26,7 @@ internal sealed partial class OverlaySettings
         OverlayForm.DefaultIconSize, OverlayForm.DefaultIconSize,
     };
 
-    /// <summary>Vurulmamis Legion canavarinin pembe isaret capi (piksel; OverlayForm.LegionUnhit.cs).</summary>
+    /// <summary>Vurulmamis Legion canavarinin halkali isaret capi (piksel; OverlayForm.LegionUnhit.cs).</summary>
     internal int LegionSize { get; set; } = OverlayForm.DefaultLegionSize;
 
     /// <summary>Pembe isaret acik mi; kapaliyken vurulmamislar normal nokta.</summary>

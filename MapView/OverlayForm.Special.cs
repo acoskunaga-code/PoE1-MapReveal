@@ -19,13 +19,13 @@ internal sealed partial class OverlayForm
     private static readonly Pen SpecialRing = new(Color.FromArgb(255, 255, 255), 2f);
     private static readonly Pen SpecialOuter = new(Color.FromArgb(20, 20, 20), 2f);
 
-    private ulong[] trackedSpecial = Array.Empty<ulong>();
+    private (ulong Render, Brush Fill)[] trackedSpecial = Array.Empty<(ulong, Brush)>();
     private int specialLogged = -1;
 
     /// <summary>RefreshMonsters'tan: aranan canavar sayisi degisince gunluge bir satir (ekrana bakmadan dogrulamak icin).</summary>
     private void SetSpecial(HashSet<ulong> found)
     {
-        this.trackedSpecial = found.ToArray();
+        this.trackedSpecial = found.Select(r => (r, (Brush)SpecialFill)).ToArray();
         if (found.Count == this.specialLogged) { return; }
 
         this.specialLogged = found.Count;
@@ -51,19 +51,20 @@ internal sealed partial class OverlayForm
     }
 
     private void PaintSpecialMonsters(PaintEventArgs e, Matrix transform) =>
-        this.PaintRings(e, transform, this.trackedSpecial, SpecialFill, Math.Max(14f, this.icons.Diameter[2] * 1.6f));
+        this.PaintRings(e, transform, this.trackedSpecial, Math.Max(14f, this.icons.Diameter[2] * 1.6f));
 
     /// <summary>
-    ///     Render adreslerinin canli konumuna <paramref name="d"/> capinda halkali isaret: koyu dis halka, dolgu, beyaz
-    ///     halka (Special, LegionUnhit).
+    ///     Render adreslerinin canli konumuna <paramref name="d"/> capinda halkali isaret: koyu dis halka, kaydin kendi
+    ///     dolgusu, beyaz halka (Special, LegionUnhit).
     /// </summary>
-    private void PaintRings(PaintEventArgs e, Matrix transform, ulong[] list, Brush fill, float d)
+    private void PaintRings(PaintEventArgs e, Matrix transform, (ulong Render, Brush Fill)[] list, float d)
     {
         var h = this.handle;
         if (list.Length == 0 || h == IntPtr.Zero) { return; }
 
         var points = new List<PointF>(list.Length);
-        foreach (var render in list)
+        var fills = new List<Brush>(list.Length);
+        foreach (var (render, fill) in list)
         {
             if (!EntityReader.Read(h, render + EntityReader.RenderPosition, this.monsterPosition)) { continue; }
 
@@ -72,6 +73,7 @@ internal sealed partial class OverlayForm
             if (!float.IsFinite(x) || !float.IsFinite(y) || x <= 0 || y <= 0) { continue; }
 
             points.Add(new PointF((x / PlayerPos.UnitsPerCell) + this.MapOffsetX, (y / PlayerPos.UnitsPerCell) + this.MapOffsetY));
+            fills.Add(fill);
         }
 
         if (points.Count == 0) { return; }
@@ -81,12 +83,13 @@ internal sealed partial class OverlayForm
 
         var saved = e.Graphics.SmoothingMode;
         e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        foreach (var p in array)
+        for (var i = 0; i < array.Length; i++)
         {
+            var p = array[i];
             if (p.X < -d || p.Y < -d || p.X > this.ClientSize.Width + d || p.Y > this.ClientSize.Height + d) { continue; }
 
             e.Graphics.DrawEllipse(SpecialOuter, p.X - (d / 2f) - 2f, p.Y - (d / 2f) - 2f, d + 4f, d + 4f);
-            e.Graphics.FillEllipse(fill, p.X - (d / 2f), p.Y - (d / 2f), d, d);
+            e.Graphics.FillEllipse(fills[i], p.X - (d / 2f), p.Y - (d / 2f), d, d);
             e.Graphics.DrawEllipse(SpecialRing, p.X - (d / 2f), p.Y - (d / 2f), d, d);
         }
 

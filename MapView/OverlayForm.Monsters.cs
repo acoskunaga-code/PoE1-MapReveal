@@ -101,8 +101,8 @@ internal sealed partial class OverlayForm
             }
 
             this.trackedMonsters = Array.Empty<(ulong, int)>();
-            this.trackedSpecial = Array.Empty<ulong>();
-            this.trackedUnhit = Array.Empty<ulong>();
+            this.trackedSpecial = Array.Empty<(ulong, Brush)>();
+            this.trackedUnhit = Array.Empty<(ulong, Brush)>();
             this.trackedIcons = Array.Empty<MapIconTarget>();
             this.trackedWildwood = Array.Empty<(ulong, WildwoodReader.Marker)>();
             this.trackedCaches = Array.Empty<(ulong, CacheReader.Marker)>();
@@ -156,8 +156,8 @@ internal sealed partial class OverlayForm
                 EntityReader.ReadMapHeader(h, area + EntityReader.AwakeMap) is not { } map)
             {
                 this.trackedMonsters = Array.Empty<(ulong, int)>();
-                this.trackedSpecial = Array.Empty<ulong>();
-                this.trackedUnhit = Array.Empty<ulong>();
+                this.trackedSpecial = Array.Empty<(ulong, Brush)>();
+                this.trackedUnhit = Array.Empty<(ulong, Brush)>();
                 this.trackedWasting = Array.Empty<(ulong, bool, string)>();
                 this.trackedIcons = Array.Empty<MapIconTarget>();
                 this.trackedWildwood = Array.Empty<(ulong, WildwoodReader.Marker)>();
@@ -190,7 +190,7 @@ internal sealed partial class OverlayForm
             var uniqueRenders = new HashSet<ulong>();
             var foundWasting = new List<(ulong, bool, string)>();
             var foundSpecial = new HashSet<ulong>();
-            var foundUnhit = new HashSet<ulong>();
+            var foundUnhit = new Dictionary<ulong, int>();
             var unhitSleeping = 0;
             var seen = new HashSet<(uint, ulong)>();
 

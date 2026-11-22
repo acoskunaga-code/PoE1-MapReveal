@@ -18,7 +18,7 @@
 
 - 🗺️ **Whole map on entry** — the explored *and* unexplored layout, lined up with the game's own large map as you zoom and pan.
 - 👹 **Monsters by rarity** — 🔴 normal · 🔵 magic · 🟡 rare · 🟤 unique. Each rarity can be switched off or resized. Rare **Fungal Shamans** get a green ring of their own.
-- ⚔️ **Legion** — the frozen army of a Legion you have not opened yet stays off the map until you click the monolith. After the click every monster you have **not hit yet** gets a pink ring, so you can find the last one and release the whole army without waiting for the timer (Settings → General → *Legion*: on/off and size).
+- ⚔️ **Legion** — the frozen army of a Legion you have not opened yet stays off the map until you click the monolith. After the click every monster you have **not hit yet** gets a ring filled with its rarity colour (red normal, blue magic, yellow rare, orange unique), so you can find the last one and release the whole army without waiting for the timer (Settings → General → *Legion*: on/off and size).
 - 🟣 **Abyssal Wasting** — the Wasting ground (purple disc) and the Wasting Well / Tarhulk monsters that leave it (purple ring) are marked (Settings → Altars; can be switched off).
 - 🎯 **Clean player spot** — the red player ring is off by default, so it never covers the game's own arrow (Settings → General → *Player marker on the map* brings it back).
 - 🚪 **Exit paths** — a coloured route from you to every exit, labelled with where it leads. Pick which exits are shown at all (Settings → Paths, with a search box); an unticked exit loses its route, marker and name. Routes follow doors and barriers that open and close (e.g. the Breach Hive arms).
