@@ -87,6 +87,9 @@ internal sealed partial class OverlaySettings
                     case PlayerMarkerKey:
                         settings.PlayerMarker = value.Equals("acik", StringComparison.OrdinalIgnoreCase);
                         break;
+                    case CheckUpdatesKey:
+                        settings.CheckUpdates = !value.Equals("kapali", StringComparison.OrdinalIgnoreCase);
+                        break;
                     case DjinnCachesKey:
                         settings.DjinnCaches = !value.Equals("kapali", StringComparison.OrdinalIgnoreCase);
                         break;
@@ -190,6 +193,7 @@ internal sealed partial class OverlaySettings
             this.WritePlayerLines(lines);
             this.WriteKeyLines(lines);
             this.WriteAutoKeyLines(lines);
+            this.WriteUpdateLines(lines);
 
             File.WriteAllLines(FilePath, lines);
         }

@@ -94,6 +94,11 @@ internal sealed partial class SettingsForm : Form
         };
         page.Controls.Add(marker);
 
+        // Acilista guncelleme sorusu (OverlayContext.Update.cs); isteyen kapatir.
+        var updates = new CheckBox { AutoSize = true, Location = new Point(260, 49), Text = "Check for updates at start", Checked = this.settings.CheckUpdates };
+        updates.CheckedChanged += (_, _) => this.settings.CheckUpdates = updates.Checked;
+        page.Controls.Add(updates);
+
         var monsters = new MonsterPanel(this.settings, this.apply) { Location = new Point(12, 92) };
 
         // Kisayollar (GlobalHotKey): oyun on plandayken de calisiyor. Iki kutuya ayni tus verilemiyor.

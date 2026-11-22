@@ -3,7 +3,8 @@ namespace Poe2Map;
 /// <summary>
 ///     Ayarsiz haritanin giris noktasi. Pencere yok; butun is <see cref="OverlayContext"/>
 ///     icinde donuyor (tepsi simgesi + overlay). Uygulama kendi adiyla, oldugu yerden
-///     calisir - kopyalanma, yeniden adlandirma, gizlenme yok.
+///     calisir - gizlenme, rastgele ad, baska klasore kopyalanma yok. Tek istisna kullanicinin onayladigi guncelleme:
+///     yeni exe ayni klasorde eskisinin yerine ayni adla gecer (UpdateApply).
 ///
 ///     Tek ornek: ayni anda iki kopya calisirsa iki overlay ust uste biner. Adlandirilmis
 ///     mutex ikinci calismayi sessizce durduruyor.
@@ -11,10 +12,13 @@ namespace Poe2Map;
 internal static class Program
 {
     [STAThread]
-    private static void Main()
+    private static void Main(string[] args)
     {
         // Gunluk adi exe adindan bagimsiz: exe yeniden adlandirilsa da kayitlar mapoverlay.log'da kalir.
         CrashLog.Channel = "mapoverlay";
+
+        // Guncelleme adimi: eski surumun kapanmasini bekledigi icin tek ornek mutex'inden once.
+        if (UpdateApply.Run(args)) { return; }
 
         // Ayni surec icin tek ornek; mutex adi surece ozel.
         using var single = new Mutex(true, @"Local\Poe1Map.MapOverlay", out var owned);

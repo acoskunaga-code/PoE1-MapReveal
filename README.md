@@ -31,6 +31,7 @@
 - ⌨️ **Hotkeys** — one key hides the whole overlay (default **F9**), another hides only the exit paths (default **F10**). Both can be changed.
 - 🧪 **Flasks (optional, off by default)** — presses a key you choose when your life or energy shield drops below a percentage you set, only while the game window is in front (Settings → Flasks).
 - ⚡ **Quick** — the first map appears about 4–5 s after starting, a new zone is picked up in about 0.1–0.2 s, and newly dropped uniques are named right away. The map background is drawn once and reused, so the overlay uses far less CPU.
+- 🔄 **Updates** — at start it asks GitHub whether a newer release exists and, if so, shows what is new (also for versions you skipped) and asks you. Nothing is downloaded until you click **Update now**. It then checks the file's SHA-256, replaces the exe under the same name and restarts; settings are kept. No personal data is sent. Settings → General → *Check for updates at start* switches it off. Versions before v3.30.8 have to be updated by hand once.
 - 🔒 **Hands off the game** — it only reads game memory. It does not modify the game or inject code. The only input it ever sends is the optional Flasks key above.
 
 ## 🚀 Quick start
@@ -41,7 +42,7 @@
 4. Press **Tab** to open the large map. The overlay is drawn on top of it.
 5. Tray icon → **Settings** for line colour, player marker, monster icons, Legion marker, hotkeys (General), map icons (Icons), altar frames and Abyssal Wasting (Altars), Fate suggestions (Fates), exit paths (Paths), uniques (Uniques) and the flask key (Flasks).
 
-Everything it writes (settings, log, downloaded icons) stays in a `data` folder next to the exe — nothing in AppData, no registry, no installer. Delete the folder to reset. (If the exe sits in a write-protected folder such as Program Files, it falls back to `%LOCALAPPDATA%\poe1-map`.) Files of older versions are moved there on first start. The log is capped at about 2 MB.
+Everything it writes (settings, log, downloaded icons) stays in a `data` folder next to the exe, except an update you accept, which replaces the exe itself — nothing in AppData, no registry, no installer. Delete the folder to reset. (If the exe sits in a write-protected folder such as Program Files, it falls back to `%LOCALAPPDATA%\poe1-map`.) Files of older versions are moved there on first start. The log is capped at about 2 MB.
 
 > The memory layout it reads belongs to one game build. After a patch the map may need its constants re-derived — the `MapScan` tools are there for that.
 

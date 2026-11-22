@@ -17,6 +17,10 @@
     <RootNamespace>Poe2Map</RootNamespace>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
 
+    <!-- HER SURUMDE ARTIR, etiketle ayni olmali (v3.30.8 = 3.30.8): acilistaki guncelleme sorusu bununla karsilastiriyor,
+         indirilen exe'de tutmazsa kurulum reddediliyor (UpdateFeed, UpdateInstall). -->
+    <Version>3.30.8</Version>
+
     <!-- Debug derlemesinde bile iyilestirici acik: varsayilan Debug'ta JIT iyilestiricisi kapali ve her yontem
          optimizasyonsuz derleniyor; saniyede 60 kez calisan okuma/cizim dongusu ile harita uretimi bundan yavasliyordu. -->
     <Optimize>true</Optimize>

@@ -119,6 +119,7 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.timer.Start();
         this.autoKeys = new AutoKeys(this.settings, () => Volatile.Read(ref this.gamePid));
         this.OpenSettingsFromArgs();
+        this.StartUpdateCheck();
     }
 
     private void ApplySettings()
@@ -249,6 +250,7 @@ internal sealed partial class OverlayContext : ApplicationContext
         // Kapatirken paneli kendimiz kapatiyoruz ki ayarlar diske yazilsin: mesaj
         // dongusu bitince FormClosed artik calismiyor.
         if (this.settingsForm is { IsDisposed: false }) { this.settingsForm.Close(); }
+        if (this.updateWindow is { IsDisposed: false }) { this.updateWindow.Close(); }
 
         // Ayar penceresi hic acilmadiysa da gorulen cikis adlari kaybolmasin.
         this.settings.Save();
