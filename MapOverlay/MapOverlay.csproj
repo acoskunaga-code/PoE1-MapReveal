@@ -61,6 +61,7 @@
     <Compile Include="..\MapScan\UniqueArt.cs" Link="Shared\UniqueArt.cs" />
     <Compile Include="..\MapScan\UniqueTierBuilder.cs" Link="Shared\UniqueTierBuilder.cs" />
     <Compile Include="..\MapScan\FatePlanner.cs" Link="Shared\FatePlanner.cs" />
+    <Compile Include="..\MapScan\FateValues.cs" Link="Shared\FateValues.cs" />
     <Compile Include="..\MapView\OverlayForm.Wildwood.cs" Link="Shared\OverlayForm.Wildwood.cs" />
     <Compile Include="..\MapScan\WildwoodReader.cs" Link="Shared\WildwoodReader.cs" />
     <Compile Include="..\MapScan\CacheReader.cs" Link="Shared\CacheReader.cs" />

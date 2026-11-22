@@ -3,7 +3,7 @@ namespace Poe2Map;
 /// <summary>
 ///     Ayar penceresinin "Fates" sekmesi: Fate panelinde kartlarin ustune odul yazilari yazilsin mi, hangi yazilar gecen
 ///     odul renkli yazilip kartin kutusu cercevelensin (altarlardaki gibi, her satira bir yazi), ve Invoke Fates panelinde
-///     en iyi secim onerisi ile onun odul sirasi (FatePlanner). Degisiklik aninda uygulaniyor, pencere kapaninca diske
+///     en iyi secim onerisi ile odul degerleri (FateValues). Degisiklik aninda uygulaniyor, pencere kapaninca diske
 ///     yaziliyor.
 /// </summary>
 internal sealed class FatePanel : Panel
@@ -34,7 +34,7 @@ internal sealed class FatePanel : Panel
 
         var phrases = Lines(new Point(12, 70), 100, settings.FatePhrases, l => settings.FatePhrases = l, apply);
 
-        // Invoke Fates: en iyi kartlar ve tiklama sirasi (OverlayForm.FatePlan.cs), sira asagidaki listeden.
+        // Invoke Fates: en iyi kartlar ve tiklama sirasi (OverlayForm.FatePlan.cs), degerler asagidaki listeden.
         var plan = new CheckBox
         {
             AutoSize = true,
@@ -48,28 +48,30 @@ internal sealed class FatePanel : Panel
             apply();
         };
 
-        var rankLabel = new Label
+        var valueLabel = new Label
         {
             AutoSize = true,
             Location = new Point(12, 212),
-            Text = "Reward order for the suggestion, best first, one per line:",
+            Text = "Reward value in chaos for the suggestion, one per line:",
         };
 
-        var ranking = Lines(new Point(12, 236), 150, settings.FateRanking, l => settings.FateRanking = l, apply);
+        var valueBox = Lines(new Point(12, 236), 150, settings.FateValueLines, l => settings.FateValueLines = l, apply);
+        var reset = new Button { Text = "Defaults", Location = new Point(388, 206), Size = new Size(80, 26) };
+        reset.Click += (_, _) => valueBox.Lines = FateValues.Defaults.ToArray();
 
         var hint = new Label
         {
             Location = new Point(12, 394),
             Size = new Size(456, 120),
             ForeColor = SystemColors.GrayText,
-            Text = "A reward is ranked by the first line it contains (\"Valuable Currency\" above \"Currency\"); rewards " +
-                   "matching no line count least. Two cards with the same name: the one clicked first keeps its rewards " +
-                   "three times and opens its \"two copies\" reward, the other one's rewards are lost. Such a combination " +
-                   "beats a single reward that is a few lines higher (Unique x3 beats one Currency).\n\n" +
-                   "Upper / lower case and numbers do not matter; a short part of the text is enough.",
+            Text = "A reward is worth the first line it contains; [2] or [3] limits a line to rewards that need that " +
+                   "many copies. Rewards matching no line are worth 1.\n\n" +
+                   "Two cards with the same name: the first one clicked counts three times, the second is lost. Three: " +
+                   "the first and third count three times. A \"two / three copies\" reward adds up over all invoked " +
+                   "cards, so different cards can complete it together.",
         };
 
-        this.Controls.AddRange(new Control[] { show, label, color, phrases, plan, rankLabel, ranking, hint });
+        this.Controls.AddRange(new Control[] { show, label, color, phrases, plan, valueLabel, valueBox, reset, hint });
     }
 
     /// <summary>Her satira bir yazi alan cok satirli kutu; degisince bos satirlar atilip ayara yaziliyor.</summary>

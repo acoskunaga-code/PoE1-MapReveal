@@ -35,6 +35,7 @@
     <Compile Include="..\MapScan\AltarLabels.cs" Link="AltarLabels.cs" />
     <Compile Include="..\MapScan\FateLabels.cs" Link="FateLabels.cs" />
     <Compile Include="..\MapScan\FatePlanner.cs" Link="FatePlanner.cs" />
+    <Compile Include="..\MapScan\FateValues.cs" Link="FateValues.cs" />
     <Compile Include="..\MapScan\WildwoodReader.cs" Link="WildwoodReader.cs" />
     <Compile Include="..\MapScan\CacheReader.cs" Link="CacheReader.cs" />
     <Compile Include="..\MapScan\AbyssalWasting.cs" Link="AbyssalWasting.cs" />

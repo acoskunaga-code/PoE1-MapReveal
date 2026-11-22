@@ -133,7 +133,7 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.overlay.SetAltarHighlight(
             this.settings.AltarPlayer, this.settings.AltarPhrases, this.settings.AltarPlayerColor, this.settings.AltarTextColor);
         this.overlay.SetFateLabels(this.settings.FateRewards, this.settings.FatePhrases, this.settings.FateTextColor);
-        this.overlay.SetFatePlan(this.settings.FatePlan, this.settings.FateRanking);
+        this.overlay.SetFatePlan(this.settings.FatePlan, this.settings.FateValueLines);
         this.overlay.SetHiddenPaths(this.settings.HiddenPaths);
         this.overlay.SetWildwood(this.settings.Wildwood);
         this.overlay.SetDjinnCaches(this.settings.DjinnCaches);

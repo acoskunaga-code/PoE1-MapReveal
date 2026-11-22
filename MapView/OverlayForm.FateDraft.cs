@@ -24,7 +24,7 @@ internal sealed partial class OverlayForm
         this.fateHandNames = offers.Count == 0
             ? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             : hand.GroupBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
-        return offers.Count == 0 ? null : FatePlanner.Draft(offers, hand, this.invokeSlots, this.fateRanking);
+        return offers.Count == 0 ? null : FatePlanner.Draft(offers, hand, this.invokeSlots, this.fateValues);
     }
 
     /// <summary>
@@ -117,7 +117,7 @@ internal sealed partial class OverlayForm
 
         var title = "Take: " + pick.Name;
         var later = "Invoke later: " + string.Join("  ", plan.Order.Select((c, i) => $"{i + 1} {c.Name}"));
-        var gains = "-> " + FatePlanner.Describe(plan.Gains);
+        var gains = "-> " + FatePlanner.Describe(plan);
         var width = new[] { title, later, gains }.Max(t => g.MeasureString(t, font).Width) + 14;
         width = Math.Min(width, this.ClientSize.Width - 8);
         var line = font.GetHeight(g);

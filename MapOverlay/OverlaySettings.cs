@@ -78,7 +78,7 @@ internal sealed partial class OverlaySettings
                     case PathOnKey or PathOffKey:
                         ReadPathLine(settings, key, value);
                         break;
-                    case FateRewardsKey or FateTextKey or FateTextColorKey or FatePlanKey or FateRankKey:
+                    case FateRewardsKey or FateTextKey or FateTextColorKey or FatePlanKey or FateValuesKey:
                         ReadFateLine(settings, key, value);
                         break;
                     case LegionKey:

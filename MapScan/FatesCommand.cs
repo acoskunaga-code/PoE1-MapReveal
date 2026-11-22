@@ -73,7 +73,7 @@ internal static class FatesCommand
                 }
             }
 
-            // En iyi secim (FatePlanner, baslangic sirasiyla): overlay'in eldeki kartlara yazdigi numaralar.
+            // En iyi secim (FatePlanner, baslangic degerleriyle): overlay'in eldeki kartlara yazdigi numaralar.
             // "hepsi" kipinde oduller "[simge] " gibi etiketli; kapali panelde de denenebilsin diye gorunur simgeler aliniyor.
             const string Shown = "[simge] ";
             var hand = cards.Where(c => c.Group == 1 && c.Name.Length > 0)
@@ -81,11 +81,11 @@ internal static class FatesCommand
                 .ToList();
             var picks = FateLabels.TopSlots(h, panel);
             Console.WriteLine($"Invoke Fates: {FateLabels.IsInvoke(h, panel)}  ust yuva: {picks}  elde: {hand.Count} kart");
-            if (FatePlanner.Best(hand, picks > 0 ? picks : 3, FatePlanner.DefaultRanking) is { } plan)
+            if (FatePlanner.Best(hand, picks > 0 ? picks : 3, FateValues.Default) is { } plan)
             {
                 Console.WriteLine("oneri: " + string.Join(", ", plan.Order.Select((c, i) =>
                     $"{i + 1} {c.Name}{(plan.Mains.Contains(c) && plan.Order.Count(o => o.Name == c.Name) > 1 ? " (ana)" : "")}")));
-                Console.WriteLine($"    -> {FatePlanner.Describe(plan.Gains)}  (puan {plan.Score:F0})");
+                Console.WriteLine($"    -> {FatePlanner.Describe(plan)}  (deger {plan.Score:F0}c)");
             }
 
             return 0;

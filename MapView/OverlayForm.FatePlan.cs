@@ -4,8 +4,8 @@ namespace Poe2Map;
 
 /// <summary>
 ///     "Invoke Fates" paneli acikken en iyi secim (FatePlanner): eldeki onerilen kartlara tiklama sirasi numarasi ve yesil
-///     cerceve, eldeki kartlarin altina (sigmazsa yanina) "bu sirayla tikla -> kazanc" kutusu. Sira ayar penceresinin Fates
-///     sekmesinden degisiyor.
+///     cerceve, eldeki kartlarin altina (sigmazsa yanina) "bu sirayla tikla -> kazanc" kutusu. Odul degerleri ayar
+///     penceresinin Fates sekmesinden degisiyor (FateValues).
 /// </summary>
 internal sealed partial class OverlayForm
 {
@@ -17,7 +17,8 @@ internal sealed partial class OverlayForm
     private static readonly SolidBrush PlanBadgeDone = new(Color.FromArgb(200, 90, 90, 90));
 
     private bool fatePlanEnabled = true;
-    private string[] fateRanking = FatePlanner.DefaultRanking;
+    private FateValues fateValues = FateValues.Default;
+    private string fateAdviceLogged = "";
     private FatePlanner.Plan? fatePlan;
     private HashSet<ulong> fatePlanTaken = new();
     private Font? planBadgeFont;
@@ -26,11 +27,11 @@ internal sealed partial class OverlayForm
     private (FateLabels.Card Pick, FatePlanner.Plan Plan)? fateDraft;
     private int invokeSlots = 3;
 
-    /// <summary>Oneri acik mi ve odul sirasi (en iyi en ustte).</summary>
-    internal void SetFatePlan(bool enabled, IEnumerable<string> ranking)
+    /// <summary>Oneri acik mi ve odul degerleri ("yazi = chaos" satirlari).</summary>
+    internal void SetFatePlan(bool enabled, IEnumerable<string> values)
     {
         this.fatePlanEnabled = enabled;
-        this.fateRanking = ranking.ToArray();
+        this.fateValues = new FateValues(values);
         if (!enabled)
         {
             this.fatePlan = null;
@@ -55,13 +56,16 @@ internal sealed partial class OverlayForm
         if (!invoke || hand.Count == 0)
         {
             this.fatePlan = null;
+            if (this.fateDraft is { } draft) { this.LogFateAdvice($"AL {draft.Pick.Name}", draft.Plan, cards); }
+
             return;
         }
 
         var picks = FateLabels.TopSlots(h, this.fatePanel);
         if (picks > 0) { this.invokeSlots = picks; }
 
-        this.fatePlan = FatePlanner.Best(hand, picks > 0 ? picks : this.invokeSlots, this.fateRanking);
+        this.fatePlan = FatePlanner.Best(hand, picks > 0 ? picks : this.invokeSlots, this.fateValues);
+        if (this.fatePlan is { } advice) { this.LogFateAdvice("CAGIR", advice, hand); }
 
         // Uste konmus kartlar: eldeki ayni ad + ayni odullu kart (el sirasi uste konanlari da tutuyor).
         var taken = new HashSet<ulong>();
@@ -72,6 +76,24 @@ internal sealed partial class OverlayForm
         }
 
         this.fatePlanTaken = taken;
+    }
+
+    /// <summary>"Oneri kotu" denince bakilacak yer: oneri degisince gorulen kartlar, oduller ve onerilen sira gunluge.</summary>
+    private void LogFateAdvice(string what, FatePlanner.Plan plan, IEnumerable<FateLabels.Card> cards)
+    {
+        static string Reward(string reward)
+        {
+            var (text, need) = FatePlanner.Parse(reward);
+            return need > 1 ? $"{FatePlanner.Short(text)} /{need}" : FatePlanner.Short(text);
+        }
+
+        var seen = string.Join("; ", cards.Select(c => $"{(c.Group == 0 ? "teklif" : "el")} {c.Name} [{string.Join(" + ", c.Rewards.Select(Reward))}]"));
+        var order = string.Join(", ", plan.Order.Select(c => c.Name));
+        var line = $"fate onerisi: {what}  sira {order}  -> {FatePlanner.Describe(plan)}  deger {plan.Score:F0}c  |  {seen}";
+        if (line == this.fateAdviceLogged) { return; }
+
+        this.fateAdviceLogged = line;
+        CrashLog.Write(line, null);
     }
 
     /// <summary>PaintFates'in sonunda: kartlarin ve kutularin yeri belli olduktan sonra.</summary>
@@ -119,7 +141,7 @@ internal sealed partial class OverlayForm
         if (rects.Count == 0) { return; }
 
         var title = "Best: " + string.Join("  ", plan.Order.Select((c, i) => $"{i + 1} {c.Name}"));
-        var gains = "-> " + FatePlanner.Describe(plan.Gains);
+        var gains = "-> " + FatePlanner.Describe(plan);
         var width = Math.Max(g.MeasureString(title, font).Width, g.MeasureString(gains, font).Width) + 14;
         width = Math.Min(width, this.ClientSize.Width - 8);
         var lineHeight = g.MeasureString(gains, font, (int)(width - 10)).Height;

@@ -6,15 +6,17 @@ namespace Poe2Map;
 ///
 ///     PoE1 (15.11.2026, canli, `MapScan fates`; iki Torchbearer ustte):
 ///
-///         satir                       panel/7            (cocuk 0 = kazanilan oduller, 1 = kopya odulleri, 2 = ozet yazisi)
-///         panel/7/0/j, panel/7/1/j    odul simgesi; -> 3 yazi ogesi (+0x358), kart simgeleriyle ayni yapi
-///         panel/7/2 + 0x358           ozet: "<valuedefault>{3x ...}" kazanilan, "<default>{1/2 ...}" eksik kopya
+///         satir                       panelin uc cocuklu tek cocugu: 15.11 panel/7, 22.11 panel/8 (3.30.0d araya bir oge
+///                                     ekledi), o yuzden sirayla degil yapiyla bulunuyor
+///                                     (cocuk 0 = kazanilan oduller, 1 = kopya odulleri, 2 = ozet yazisi)
+///         satir/0/j, satir/1/j        odul simgesi; -> 3 yazi ogesi (TextOffset), kart simgeleriyle ayni yapi
+///         satir/2 + TextOffset        ozet: "<valuedefault>{3x ...}" kazanilan, "<default>{1/2 ...}" eksik kopya
 ///
 ///     Kart simgelerinde oldugu gibi kullanilmayan simge gizli ama eski yazisini tutuyor olabilir; Visible ile ayriliyor.
 /// </summary>
 internal static class FateTotals
 {
-    private const int RowIndex = 7;
+    private const int RowParts = 3;
     private const int SummaryIndex = 2;
     private const int RewardText = 3;
 
@@ -26,12 +28,16 @@ internal static class FateTotals
     internal static Row? Read(IntPtr h, ulong panel)
     {
         var buf = new byte[AltarLabels.TextOffset + 0x20];
-        if (!FateLabels.Read(h, panel, buf) || AltarLabels.Children(h, buf) is not { Count: > RowIndex } groups) { return null; }
+        if (!FateLabels.Read(h, panel, buf)) { return null; }
 
-        var row = groups[RowIndex];
-        if (!FateLabels.Read(h, row, buf) || AltarLabels.Children(h, buf) is not { Count: > SummaryIndex } parts) { return null; }
+        foreach (var child in AltarLabels.Children(h, buf).Take(32))
+        {
+            if (!FateLabels.Read(h, child, buf) || AltarLabels.Children(h, buf) is not { Count: RowParts } parts) { continue; }
 
-        return new Row(row, Icons(h, parts[0]), Icons(h, parts[1]), FateLabels.TextOf(h, parts[SummaryIndex]));
+            return new Row(child, Icons(h, parts[0]), Icons(h, parts[1]), FateLabels.TextOf(h, parts[SummaryIndex]));
+        }
+
+        return null;
     }
 
     private static List<Icon> Icons(IntPtr h, ulong list)
