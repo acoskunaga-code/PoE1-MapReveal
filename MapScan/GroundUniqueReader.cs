@@ -1,4 +1,4 @@
-namespace Poe2Map;
+﻿namespace Poe2Map;
 
 /// <summary>
 ///     Yerdeki unique esyanin adi, tanimlanmamis olsa bile. 18.11.2026 canli (`MapScan grounditems`, 204 yer esyasi):
@@ -29,8 +29,11 @@ internal static class GroundUniqueReader
         if (!info.Path.EndsWith("/WorldItem", StringComparison.Ordinal)) { return ""; }
         if (!info.Components.TryGetValue("WorldItem", out var world)) { return null; }
 
+        // Esya varligi dunya listesinde degil; +0x8C bayti onda bayrak degil (21.11.2026 `MapScan itemflags`: 2260 yer
+        // esyasinin ~800'unde bit 0 acik, deger zamanla degisiyor). Bayrak sinamasi esyanin nadirligini 0.5-5 sn
+        // geciktiriyor ya da hic okutmuyordu (kullanici: "esyalari gec ciziyor belirginlestiriyor"); burada yok sayiliyor.
         var item = PlayerChain.ReadPointer(h, world + WorldItemEntity);
-        if (EntityReader.ReadInfo(h, item) is not { } it) { return null; }
+        if (EntityReader.ReadInfo(h, item, anyFlag: true) is not { } it) { return null; }
         if (!it.Components.TryGetValue("Mods", out var mods) || !it.Components.TryGetValue("RenderItem", out var render)) { return ""; }
 
         var rarity = new byte[4];

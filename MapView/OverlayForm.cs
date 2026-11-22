@@ -897,7 +897,10 @@ internal sealed partial class OverlayForm : Form
         var started = System.Diagnostics.Stopwatch.GetTimestamp();
         try
         {
+            this.profile.Mark("arka plan");
+            this.terrainDrawn = false;
             this.PaintOverlay(e);
+            this.ClearIfNoTerrain(e);
 
             // Altar kutulari ve Fate yazilari haritadan bagimsiz: buyuk harita kapaliyken de (OverlayForm.Altars.cs, .Fates.cs).
             this.PaintAltars(e);
@@ -905,6 +908,7 @@ internal sealed partial class OverlayForm : Form
             this.PaintUniqueFrames(e);
             this.PaintUniqueAlerts(e);
             this.PaintNotice(e);
+            this.profile.Mark("altar/fate/uniq");
         }
         catch (Exception ex)
         {
@@ -985,19 +989,26 @@ internal sealed partial class OverlayForm : Form
         e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
         e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
 
-        var saved = e.Graphics.Transform;
-        e.Graphics.Transform = m;
-        e.Graphics.DrawImage(this.map, 0, 0, this.gridWidth, this.gridHeight);
-        e.Graphics.Transform = saved;
+        // Zemin onbellekten (OverlayForm.TerrainCache.cs): her karede butun haritayi donusumle cizmek pahaliydi.
+        this.profile.Mark("hazirlik");
+        this.DrawTerrain(e.Graphics, m);
+        this.profile.Mark("zemin");
 
         // Cikis yollari haritanin ustune (OverlayForm.Paths.cs), canavarlar onlarin
         // ustune (OverlayForm.Monsters.cs), oyuncu isareti en uste.
         this.PaintPaths(e, m, p);
+        this.profile.Mark("yollar");
         this.PaintWildwood(e, m);
         this.PaintMonsters(e, m);
+        this.PaintSpecialMonsters(e, m);
+        this.PaintUnhitLegion(e, m);
+        this.profile.Mark("canavarlar");
         this.PaintMapIcons(e, m);
+        this.profile.Mark("simgeler");
         this.PaintCaches(e, m);
+        this.PaintWasting(e, m);
         this.PaintGroundUniques(e, m);
+        this.profile.Mark("diger");
 
             if (this.calibrating)
             {

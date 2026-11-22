@@ -30,12 +30,14 @@
     <Compile Include="..\MapScan\CamHunt.cs" Link="CamHunt.cs" />
     <Compile Include="..\MapScan\UiFinder.cs" Link="UiFinder.cs" />
     <Compile Include="..\MapScan\EntityReader.cs" Link="EntityReader.cs" />
+    <Compile Include="..\MapScan\HiddenMonsters.cs" Link="HiddenMonsters.cs" />
     <Compile Include="..\MapScan\MapIconReader.cs" Link="MapIconReader.cs" />
     <Compile Include="..\MapScan\AltarLabels.cs" Link="AltarLabels.cs" />
     <Compile Include="..\MapScan\FateLabels.cs" Link="FateLabels.cs" />
     <Compile Include="..\MapScan\FatePlanner.cs" Link="FatePlanner.cs" />
     <Compile Include="..\MapScan\WildwoodReader.cs" Link="WildwoodReader.cs" />
     <Compile Include="..\MapScan\CacheReader.cs" Link="CacheReader.cs" />
+    <Compile Include="..\MapScan\AbyssalWasting.cs" Link="AbyssalWasting.cs" />
     <Compile Include="..\MapScan\GroundUniqueReader.cs" Link="GroundUniqueReader.cs" />
     <Compile Include="..\MapScan\UniqueArt.cs" Link="UniqueArt.cs" />
     <Compile Include="..\MapScan\GroundLabelMap.cs" Link="GroundLabelMap.cs" />

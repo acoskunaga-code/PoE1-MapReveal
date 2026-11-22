@@ -40,6 +40,11 @@ internal sealed partial class OverlaySettings
 
     internal bool DjinnCaches { get; set; } = true;
 
+    // "abyssal-wasting = acik / kapali": Abyssal Wasting zemini ve onu birakan Wasting Well canavari (20.11.2026).
+    private const string AbyssalWastingKey = "abyssal-wasting";
+
+    internal bool AbyssalWasting { get; set; } = true;
+
     private static List<string> ReadAltarPhrases(string value) =>
         value.Split(AltarTextSeparator, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
 
@@ -61,6 +66,7 @@ internal sealed partial class OverlaySettings
         lines.Add($"{AltarTextColorKey} = {ColorText(this.AltarTextColor)}");
         lines.Add($"{WildwoodKey} = {(this.Wildwood ? "acik" : "kapali")}");
         lines.Add($"{DjinnCachesKey} = {(this.DjinnCaches ? "acik" : "kapali")}");
+        lines.Add($"{AbyssalWastingKey} = {(this.AbyssalWasting ? "acik" : "kapali")}");
 
         // Ayiracin kendisi yaziya girmesin: satir tekrar okunurken bolunurdu.
         var phrases = this.AltarPhrases.Select(p => p.Replace(AltarTextSeparator, ' ').Trim()).Where(p => p.Length > 0);

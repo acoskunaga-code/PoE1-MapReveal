@@ -1,4 +1,4 @@
-namespace Poe2Map;
+﻿namespace Poe2Map;
 
 /// <summary>
 ///     Canavar bilesenlerinin PoE1 alanlarini CANLI verinin kendisinden ayirir.
@@ -15,7 +15,7 @@ namespace Poe2Map;
 /// </summary>
 internal static class VitalProbe
 {
-    private const int LifeWindow = 0x240;
+    private const int LifeWindow = 0x250;
     private const int MagicWindow = 0x100;
 
     internal static int Run()
@@ -75,8 +75,8 @@ internal static class VitalProbe
     private static void PrintVitals(List<(string Path, bool Awake, byte[] Raw)> life)
     {
         // Aday ciftler: toplam @T, simdiki @T+4. Mana/saglik iki aday; arada energy shield (toplam 0) olmali.
-        int[] candidates = { 0x1A4, 0x1CC, 0x1F4 };
-        Console.WriteLine("Life: aday (toplam,simdiki) ciftleri 0x1A4 / 0x1CC (enerji kalkani?) / 0x1F4");
+        int[] candidates = { 0x1A4, 0x1F4, 0x23C };
+        Console.WriteLine("Life: (toplam,simdiki) 0x1A4 can / 0x1F4 / 0x23C (mana mi ES mi: 20.11.2026)");
         var dead = 0;
         foreach (var (path, awake, raw) in life.Take(400))
         {
@@ -90,6 +90,14 @@ internal static class VitalProbe
                 Console.WriteLine($"  {(isDead ? "OLU(1F4) " : alsoDeadAtMana ? "OLU(1A4) " : "         ")}" +
                                   $"{string.Join("   ", cells)}   {Shorten(path)}");
             }
+        }
+
+        // Her aday icin: toplami 0 olan canavar sayisi ve toplam araligi (ES cogu canavarda 0, mana hepsinde dolu).
+        foreach (var t in candidates)
+        {
+            var totals = life.Select(l => BitConverter.ToInt32(l.Raw, t)).ToList();
+            Console.WriteLine($"  +0x{t:X}: toplam 0 olan {totals.Count(v => v == 0)}/{totals.Count}, " +
+                              $"aralik {(totals.Count > 0 ? totals.Min() : 0)}..{(totals.Count > 0 ? totals.Max() : 0)}");
         }
 
         Console.WriteLine(dead == 0

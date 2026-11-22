@@ -22,7 +22,7 @@ internal sealed class MonsterPanel : GroupBox
     internal MonsterPanel(OverlaySettings settings, Action apply)
     {
         this.Text = "Monster icons";
-        this.Size = new Size(236, 30 + (OverlayForm.RarityNames.Length * RowHeight));
+        this.Size = new Size(236, 30 + ((OverlayForm.RarityNames.Length + 1) * RowHeight));
 
         for (var i = 0; i < OverlayForm.RarityNames.Length; i++)
         {
@@ -65,5 +65,42 @@ internal sealed class MonsterPanel : GroupBox
 
             this.Controls.AddRange(new Control[] { box, sizeLabel, sizeBox });
         }
+
+        this.AddLegionRow(settings, apply, 22 + (OverlayForm.RarityNames.Length * RowHeight));
+    }
+
+    /// <summary>
+    ///     Son satir: vurulmamis Legion canavarlarinin pembe isaret capi (kullanici 22.11.2026: "pembe noktalarin
+    ///     buyuklugunu ayarlayabiliyormuyum", "kutuda yap isteyen acmasin"). Kutu kapaliyken vurulmamislar normal nokta.
+    /// </summary>
+    private void AddLegionRow(OverlaySettings settings, Action apply, int top)
+    {
+        var name = new CheckBox { Text = "Legion", Checked = settings.LegionMarker, ForeColor = OverlayForm.UnhitColor, AutoSize = false };
+        name.SetBounds(12, top, 86, 24);
+
+        var sizeLabel = new Label { Text = "size", AutoSize = true };
+        sizeLabel.SetBounds(106, top + 4, 44, 20);
+
+        var sizeBox = new NumericUpDown
+        {
+            Minimum = OverlayForm.MinIconSize,
+            Maximum = OverlayForm.MaxIconSize,
+            Value = Math.Clamp(settings.LegionSize, OverlayForm.MinIconSize, OverlayForm.MaxIconSize),
+            Enabled = settings.LegionMarker,
+        };
+        sizeBox.SetBounds(150, top + 1, 66, 24);
+        name.CheckedChanged += (_, _) =>
+        {
+            settings.LegionMarker = name.Checked;
+            sizeBox.Enabled = name.Checked;
+            apply();
+        };
+        sizeBox.ValueChanged += (_, _) =>
+        {
+            settings.LegionSize = (int)sizeBox.Value;
+            apply();
+        };
+
+        this.Controls.AddRange(new Control[] { name, sizeLabel, sizeBox });
     }
 }

@@ -1,4 +1,4 @@
-using System.Drawing.Drawing2D;
+﻿using System.Drawing.Drawing2D;
 
 namespace Poe2Map;
 
@@ -101,11 +101,14 @@ internal sealed partial class OverlayForm
             }
 
             this.trackedMonsters = Array.Empty<(ulong, int)>();
+            this.trackedSpecial = Array.Empty<ulong>();
+            this.trackedUnhit = Array.Empty<ulong>();
             this.trackedIcons = Array.Empty<MapIconTarget>();
             this.trackedWildwood = Array.Empty<(ulong, WildwoodReader.Marker)>();
             this.trackedCaches = Array.Empty<(ulong, CacheReader.Marker)>();
             this.trackedUniques = Array.Empty<GroundUnique>();
             this.uniqueFrameLabels = Array.Empty<ulong>();
+            this.uniquePathAsked = new HashSet<ulong>();
 
             // Altar etiket kabi alan degisince yeniden bulunsun (arayuz yeniden kurulabiliyor; OverlayForm.Altars.cs).
             this.altarContainer = 0;
@@ -132,8 +135,9 @@ internal sealed partial class OverlayForm
     private void RefreshMonsters()
     {
         // Bir tur uzun surerse ust uste binmesin.
-        if (Interlocked.Exchange(ref this.monsterRefreshing, 1) == 1) { return; }
+        if (Interlocked.Exchange(ref this.monsterRefreshing, 1) == 1) { this.NoteTurnSkipped(); return; }
 
+        var started = System.Diagnostics.Stopwatch.GetTimestamp();
         try
         {
             var h = this.handle;
@@ -144,12 +148,17 @@ internal sealed partial class OverlayForm
             var wantWildwood = this.wildwood;
             var wantCaches = this.djinnCaches;
             var wantUniques = this.groundUniques;
+            var wantWasting = this.abyssalWasting;
 
             // Hepsi kapaliysa varlik listesini gezmeye de gerek yok.
-            if (h == IntPtr.Zero || area == 0 || (!wantMonsters && iconSizes is null && !wantWildwood && !wantCaches && !wantUniques) ||
+            if (h == IntPtr.Zero || area == 0 ||
+                (!wantMonsters && iconSizes is null && !wantWildwood && !wantCaches && !wantUniques && !wantWasting) ||
                 EntityReader.ReadMapHeader(h, area + EntityReader.AwakeMap) is not { } map)
             {
                 this.trackedMonsters = Array.Empty<(ulong, int)>();
+                this.trackedSpecial = Array.Empty<ulong>();
+                this.trackedUnhit = Array.Empty<ulong>();
+                this.trackedWasting = Array.Empty<(ulong, bool, string)>();
                 this.trackedIcons = Array.Empty<MapIconTarget>();
                 this.trackedWildwood = Array.Empty<(ulong, WildwoodReader.Marker)>();
                 this.trackedCaches = Array.Empty<(ulong, CacheReader.Marker)>();
@@ -163,8 +172,9 @@ internal sealed partial class OverlayForm
             var nodes = EntityReader.WalkMap(h, map, 5000);
 
             // Uyuyan liste harita simgeleri ve Wildwood icin (OverlayForm.Icons.cs, OverlayForm.Wildwood.cs): bunlar
-            // yerinden oynamiyor. Canavarlarin oradaki konumu bayat, onlar icin kullanilmiyor.
-            var sleeping = (iconSizes is not null || wantWildwood || wantCaches || wantUniques) &&
+            // yerinden oynamiyor. Canavarlarin oradaki konumu bayat, nadirlik noktalari icin kullanilmiyor; yalnizca aranan
+            // canavarlar (OverlayForm.Special.cs) ve vurulmamis Legion canavarlari (OverlayForm.LegionUnhit.cs) oradan da cizilir.
+            var sleeping = (wantMonsters || iconSizes is not null || wantWildwood || wantCaches || wantUniques) &&
                            EntityReader.ReadMapHeader(h, area + EntityReader.SleepingMap) is { } sleepingMap
                 ? EntityReader.WalkMap(h, sleepingMap, 5000)
                 : new List<(uint, ulong)>();
@@ -178,6 +188,10 @@ internal sealed partial class OverlayForm
             var cacheRenders = new HashSet<ulong>();
             var foundUniques = new List<GroundUnique>();
             var uniqueRenders = new HashSet<ulong>();
+            var foundWasting = new List<(ulong, bool, string)>();
+            var foundSpecial = new HashSet<ulong>();
+            var foundUnhit = new HashSet<ulong>();
+            var unhitSleeping = 0;
             var seen = new HashSet<(uint, ulong)>();
 
             lock (this.entityCache)
@@ -186,8 +200,16 @@ internal sealed partial class OverlayForm
                 {
                     var info = this.CachedInfo(h, id, entity, seen);
 
-                    if (wantMonsters &&
+                    // Aranan canavar (OverlayForm.Special.cs) ve vurulmamis Legion canavari (OverlayForm.LegionUnhit.cs)
+                    // nadirlik noktasi yerine kendi isaretiyle.
+                    var special = wantMonsters && info is { IsMonster: true } &&
+                                  (CollectSpecial(h, entity, info, foundSpecial) || (this.unhitOn && CollectUnhit(h, entity, info, foundUnhit)));
+
+                    // Wasting zemini (daemon) canavar noktasi olarak degil, kendi isaretiyle cizilir (OverlayForm.Wasting.cs).
+                    if (!special &&
+                        wantMonsters &&
                         info is { IsMonster: true } &&
+                        !(wantWasting && AbyssalWasting.IsGround(info)) &&
                         EntityReader.TryReadMonster(h, entity, info, out var monster) &&
                         style.Visible[monster.Rarity] &&
                         info.Components.TryGetValue("Render", out var render))
@@ -198,6 +220,7 @@ internal sealed partial class OverlayForm
                     if (info is null) { continue; }
 
                     this.NoteAltar(info);
+                    if (wantWasting) { this.CollectWasting(h, info, foundWasting); }
                     if (iconSizes is not null) { this.CollectIcon(h, entity, info, iconSizes, foundIcons, iconRenders); }
                     if (wantWildwood) { this.CollectWildwood(h, entity, info, foundWildwood, wildwoodRenders); }
                     if (wantCaches) { this.CollectCache(h, entity, info, foundCaches, cacheRenders); }
@@ -208,6 +231,7 @@ internal sealed partial class OverlayForm
                 {
                     if (this.CachedInfo(h, id, entity, seen) is not { } info) { continue; }
 
+                    if (wantMonsters && info.IsMonster && !CollectSpecial(h, entity, info, foundSpecial) && this.unhitOn && CollectUnhit(h, entity, info, foundUnhit)) { unhitSleeping++; }
                     if (iconSizes is not null) { this.CollectIcon(h, entity, info, iconSizes, foundIcons, iconRenders); }
                     if (wantWildwood) { this.CollectWildwood(h, entity, info, foundWildwood, wildwoodRenders); }
                     if (wantCaches) { this.CollectCache(h, entity, info, foundCaches, cacheRenders); }
@@ -228,10 +252,14 @@ internal sealed partial class OverlayForm
             }
 
             this.trackedMonsters = found.ToArray();
+            this.SetSpecial(foundSpecial);
+            this.SetUnhit(foundUnhit, unhitSleeping);
             this.trackedIcons = foundIcons.ToArray();
             this.trackedWildwood = foundWildwood.ToArray();
             this.trackedCaches = foundCaches.ToArray();
             this.trackedUniques = foundUniques.ToArray();
+            this.AskUniquePaths();
+            this.SetWasting(foundWasting);
             this.RefreshUniqueFrames(h);
             this.LogIconSummary(foundIcons);
             this.RefreshAltars(h, entitiesWalked: true);
@@ -244,6 +272,7 @@ internal sealed partial class OverlayForm
         }
         finally
         {
+            this.NoteTurn(started);
             Interlocked.Exchange(ref this.monsterRefreshing, 0);
         }
     }

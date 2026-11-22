@@ -26,6 +26,14 @@ internal sealed partial class OverlaySettings
         OverlayForm.DefaultIconSize, OverlayForm.DefaultIconSize,
     };
 
+    /// <summary>Vurulmamis Legion canavarinin pembe isaret capi (piksel; OverlayForm.LegionUnhit.cs).</summary>
+    internal int LegionSize { get; set; } = OverlayForm.DefaultLegionSize;
+
+    /// <summary>Pembe isaret acik mi; kapaliyken vurulmamislar normal nokta.</summary>
+    internal bool LegionMarker { get; set; } = true;
+
+    private const string LegionKey = "legion";
+
     private static string FilePath => AppPaths.File("mapoverlay-ayar.txt");
 
     internal static OverlaySettings Load()
@@ -73,11 +81,17 @@ internal sealed partial class OverlaySettings
                     case FateRewardsKey or FateTextKey or FateTextColorKey or FatePlanKey or FateRankKey:
                         ReadFateLine(settings, key, value);
                         break;
+                    case LegionKey:
+                        ReadLegionLine(settings, value);
+                        break;
                     case PlayerMarkerKey:
                         settings.PlayerMarker = value.Equals("acik", StringComparison.OrdinalIgnoreCase);
                         break;
                     case DjinnCachesKey:
                         settings.DjinnCaches = !value.Equals("kapali", StringComparison.OrdinalIgnoreCase);
+                        break;
+                    case AbyssalWastingKey:
+                        settings.AbyssalWasting = !value.Equals("kapali", StringComparison.OrdinalIgnoreCase);
                         break;
                     case WildwoodKey:
                         settings.Wildwood = !value.Equals("kapali", StringComparison.OrdinalIgnoreCase);
@@ -87,6 +101,9 @@ internal sealed partial class OverlaySettings
                         break;
                     case PathKeyName when ReadKey(value) is { } pathKey:
                         settings.PathKey = pathKey;
+                        break;
+                    case AutoLifeKey or AutoEsKey:
+                        ReadAutoKeyLine(settings, key, value);
                         break;
                     case var icon when icon.StartsWith("icon.", StringComparison.Ordinal):
                         ReadIconLine(settings, icon["icon.".Length..], value);
@@ -132,6 +149,16 @@ internal sealed partial class OverlaySettings
         }
     }
 
+    /// <summary>"legion = acik 14": nadirlik satirlariyla ayni bicim (sayi cap, yazi acik/kapali).</summary>
+    private static void ReadLegionLine(OverlaySettings settings, string value)
+    {
+        foreach (var part in value.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (int.TryParse(part, out var size)) { settings.LegionSize = Math.Clamp(size, OverlayForm.MinIconSize, OverlayForm.MaxIconSize); }
+            else { settings.LegionMarker = !part.StartsWith("kapali", StringComparison.OrdinalIgnoreCase); }
+        }
+    }
+
     internal void Save()
     {
         try
@@ -153,6 +180,8 @@ internal sealed partial class OverlaySettings
                 lines.Add($"{name,-8} = {(this.MonsterVisible[i] ? "acik" : "kapali")} {this.MonsterSize[i]}");
             }
 
+            lines.Add($"{LegionKey,-8} = {(this.LegionMarker ? "acik" : "kapali")} {this.LegionSize}");
+
             this.WriteIconLines(lines);
             this.WriteAltarLines(lines);
             this.WriteFateLines(lines);
@@ -160,6 +189,7 @@ internal sealed partial class OverlaySettings
             this.WriteUniqueLines(lines);
             this.WritePlayerLines(lines);
             this.WriteKeyLines(lines);
+            this.WriteAutoKeyLines(lines);
 
             File.WriteAllLines(FilePath, lines);
         }

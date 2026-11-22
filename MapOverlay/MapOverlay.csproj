@@ -65,9 +65,16 @@
     <Compile Include="..\MapScan\WildwoodReader.cs" Link="Shared\WildwoodReader.cs" />
     <Compile Include="..\MapScan\CacheReader.cs" Link="Shared\CacheReader.cs" />
     <Compile Include="..\MapView\OverlayForm.Caches.cs" Link="Shared\OverlayForm.Caches.cs" />
+    <Compile Include="..\MapScan\AbyssalWasting.cs" Link="Shared\AbyssalWasting.cs" />
+    <Compile Include="..\MapView\OverlayForm.Wasting.cs" Link="Shared\OverlayForm.Wasting.cs" />
     <Compile Include="..\MapView\OverlayForm.CacheWatch.cs" Link="Shared\OverlayForm.CacheWatch.cs" />
     <Compile Include="..\MapView\FrameStats.cs" Link="Shared\FrameStats.cs" />
     <Compile Include="..\MapView\OverlayForm.Frame.cs" Link="Shared\OverlayForm.Frame.cs" />
+    <Compile Include="..\MapView\OverlayForm.TerrainCache.cs" Link="Shared\OverlayForm.TerrainCache.cs" />
+    <Compile Include="..\MapView\OverlayForm.EntityTurn.cs" Link="Shared\OverlayForm.EntityTurn.cs" />
+    <Compile Include="..\MapView\OverlayForm.Special.cs" Link="Shared\OverlayForm.Special.cs" />
+    <Compile Include="..\MapView\OverlayForm.LegionUnhit.cs" Link="Shared\OverlayForm.LegionUnhit.cs" />
+    <Compile Include="..\MapView\PaintProfile.cs" Link="Shared\PaintProfile.cs" />
     <Compile Include="..\MapScan\ExitFinder.cs" Link="Shared\ExitFinder.cs" />
     <Compile Include="..\MapScan\FlowField.cs" Link="Shared\FlowField.cs" />
     <Compile Include="..\MapScan\TileReader.cs" Link="Shared\TileReader.cs" />
@@ -90,7 +97,9 @@
     <!-- Uniques sekmesinin listesi: MapScan uniquetiers ile filtreden + poewiki'den uretilir, isteye bagli. -->
     <None Include="..\data\unique-tiers.txt" Link="data\unique-tiers.txt" Condition="Exists('..\data\unique-tiers.txt')" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="..\MapScan\EntityReader.cs" Link="Shared\EntityReader.cs" />
+    <Compile Include="..\MapScan\HiddenMonsters.cs" Link="Shared\HiddenMonsters.cs" />
     <Compile Include="..\MapScan\LocalPlayer.cs" Link="Shared\LocalPlayer.cs" />
+    <Compile Include="..\MapScan\PlayerVitals.cs" Link="Shared\PlayerVitals.cs" />
     <Compile Include="..\MapView\Player.cs" Link="Shared\Player.cs" />
     <Compile Include="..\MapView\CrashLog.cs" Link="Shared\CrashLog.cs" />
   </ItemGroup>

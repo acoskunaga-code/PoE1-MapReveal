@@ -17,7 +17,9 @@
 ## ✨ What you get
 
 - 🗺️ **Whole map on entry** — the explored *and* unexplored layout, lined up with the game's own large map as you zoom and pan.
-- 👹 **Monsters by rarity** — 🔴 normal · 🔵 magic · 🟡 rare · 🟤 unique. Each rarity can be switched off or resized.
+- 👹 **Monsters by rarity** — 🔴 normal · 🔵 magic · 🟡 rare · 🟤 unique. Each rarity can be switched off or resized. Rare **Fungal Shamans** get a green ring of their own.
+- ⚔️ **Legion** — the frozen army of a Legion you have not opened yet stays off the map until you click the monolith. After the click every monster you have **not hit yet** gets a pink ring, so you can find the last one and release the whole army without waiting for the timer (Settings → General → *Legion*: on/off and size).
+- 🟣 **Abyssal Wasting** — the Wasting ground (purple disc) and the Wasting Well / Tarhulk monsters that leave it (purple ring) are marked (Settings → Altars; can be switched off).
 - 🎯 **Clean player spot** — the red player ring is off by default, so it never covers the game's own arrow (Settings → General → *Player marker on the map* brings it back).
 - 🚪 **Exit paths** — a coloured route from you to every exit, labelled with where it leads. Pick which exits are shown at all (Settings → Paths, with a search box); an unticked exit loses its route, marker and name. Routes follow doors and barriers that open and close (e.g. the Breach Hive arms).
 - 💎 **Uniques on the ground** — knows which unique dropped even while it is unidentified (a Heavy Belt can be *Mageblood*). For each unique you choose: its name on the map, a route to it, its name in big letters on the screen, and/or a frame around the game's own item label with a line from you to it. All off by default; the list groups uniques the way your loot filter does (Settings → Uniques → Build list).
@@ -27,8 +29,9 @@
 - 🏺 **Djinn's Caches** — marked on the map with their metal and contents (Settings → Altars; can be switched off).
 - 🌿 **The Viridian Wildwood** — wisps by colour and size, fuel orbs, altars and Nameless Shrines.
 - ⌨️ **Hotkeys** — one key hides the whole overlay (default **F9**), another hides only the exit paths (default **F10**). Both can be changed.
-- ⚡ **Quick** — the first map appears about 4–5 s after starting, a new zone is picked up in about 0.1–0.2 s.
-- 🔒 **Read-only** — it only reads game memory. It does not modify the game, inject code or send input.
+- 🧪 **Flasks (optional, off by default)** — presses a key you choose when your life or energy shield drops below a percentage you set, only while the game window is in front (Settings → Flasks).
+- ⚡ **Quick** — the first map appears about 4–5 s after starting, a new zone is picked up in about 0.1–0.2 s, and newly dropped uniques are named right away. The map background is drawn once and reused, so the overlay uses far less CPU.
+- 🔒 **Hands off the game** — it only reads game memory. It does not modify the game or inject code. The only input it ever sends is the optional Flasks key above.
 
 ## 🚀 Quick start
 
@@ -36,7 +39,7 @@
 2. Start Path of Exile and enter an area.
 3. Run `BunuYazanTosun.exe` — a tray icon appears.
 4. Press **Tab** to open the large map. The overlay is drawn on top of it.
-5. Tray icon → **Settings** for line colour, player marker, monster icons, hotkeys (General), map icons (Icons), altar frames (Altars), Fate rewards (Fates), exit paths (Paths) and uniques (Uniques).
+5. Tray icon → **Settings** for line colour, player marker, monster icons, Legion marker, hotkeys (General), map icons (Icons), altar frames and Abyssal Wasting (Altars), Fate rewards (Fates), exit paths (Paths), uniques (Uniques) and the flask key (Flasks).
 
 Everything it writes (settings, log, downloaded icons) stays in a `data` folder next to the exe — nothing in AppData, no registry, no installer. Delete the folder to reset. (If the exe sits in a write-protected folder such as Program Files, it falls back to `%LOCALAPPDATA%\poe1-map`.) Files of older versions are moved there on first start. The log is capped at about 2 MB.
 

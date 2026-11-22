@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 
 namespace Poe2Map;
 
@@ -65,6 +65,9 @@ internal static class EntityReader
         internal string? GroundUnique;
         internal int GroundUniqueTries;
 
+        // Wasting Well modu (AbyssalWasting.HasWellMod): null = henuz bakilmadi. Modlar degismiyor, bir kez.
+        internal bool? WastingWell;
+
         internal bool IsMonster => this.Path.StartsWith("Metadata/Monsters/", StringComparison.Ordinal);
     }
 
@@ -119,11 +122,11 @@ internal static class EntityReader
     }
 
     /// <summary>Varligin yolunu ve bilesen adreslerini okur. Varlik basina bir kez yeterli.</summary>
-    internal static EntityInfo? ReadInfo(IntPtr h, ulong entity)
+    internal static EntityInfo? ReadInfo(IntPtr h, ulong entity, bool anyFlag = false)
     {
         var e = new byte[0x90];
         if (!Read(h, entity, e)) { return null; }
-        if ((e[0x8C] & 1) != 0) { return null; }
+        if (!anyFlag && (e[0x8C] & 1) != 0) { return null; }
 
         var details = BitConverter.ToUInt64(e, 0x08);
         var compFirst = BitConverter.ToUInt64(e, 0x10);
@@ -194,6 +197,9 @@ internal static class EntityReader
 
         // "Monster" bileseni olmayanlar canavar degil: arena susleri, aura nesneleri.
         if (!info.Components.ContainsKey("Monster")) { return false; }
+
+        // Acilmamis Legion canavarlari cizilmez (HiddenMonsters; yalnizca LegionLeague yolu, Eldritch vb. etkilenmez).
+        if (HiddenMonsters.IsUnopenedLegion(h, info)) { return false; }
 
         // Sahiplik sart: 16.09.2026 olcumunde ayni konum ve canla iki kayit gorundu -
         // biri butun bilesenlerinin sahibiydi, digeri degildi. Ikincisi bayat bir kopya;

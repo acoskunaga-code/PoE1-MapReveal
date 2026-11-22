@@ -48,6 +48,11 @@ internal sealed partial class SettingsForm : Form
 
         // Yerdeki unique'ler (SettingsForm.Uniques.cs): filtre gruplarina gore, ad / yol kutulari, yazi tipi ve renk.
         tabs.TabPages.Add(this.BuildUniquesTab());
+
+        // Can / ES esigin altina inince basilan tus (FlaskPanel.cs, AutoKeys.cs).
+        var flasks = new TabPage("Flasks") { UseVisualStyleBackColor = true };
+        flasks.Controls.Add(new FlaskPanel(this.settings) { Dock = DockStyle.Fill });
+        tabs.TabPages.Add(flasks);
         this.Controls.Add(tabs);
 
         // 600: Uniques sekmesinde grup basliklari ("Your filter rule 1: Leather Belt, Heavy Belt, Paua Amulet") sigsin.

@@ -1,4 +1,4 @@
-namespace Poe2Map;
+﻿namespace Poe2Map;
 
 /// <summary>
 ///     MapScan groundlabels [yol = 1/6/0] [adet = 20]: yerdeki esya yazilarinin kabi (18.11.2026 `MapScan uitext
@@ -43,7 +43,7 @@ internal static class GroundLabelsCommand
                 if (!e.Info.Components.TryGetValue("WorldItem", out var world)) { continue; }
 
                 var item = PlayerChain.ReadPointer(h, world + GroundUniqueReader.WorldItemEntity);
-                var itemPath = EntityReader.ReadInfo(h, item)?.Path ?? "?";
+                var itemPath = EntityReader.ReadInfo(h, item, anyFlag: true)?.Path ?? "?";
                 var tail = itemPath[(itemPath.LastIndexOf('/') + 1)..];
                 var unique = GroundUniqueReader.Classify(h, e.Info) is { Length: > 0 } u ? $" = {u}" : "";
                 known[e.Entity] = $"WorldItem({tail}{unique})";

@@ -27,6 +27,8 @@ internal sealed partial class OverlayContext : ApplicationContext
     private readonly GlobalHotKey toggleKey = new(GlobalHotKey.ToggleId);
     private readonly GlobalHotKey pathKey = new(GlobalHotKey.PathsId);
     private SettingsForm? settingsForm;
+    // Can / ES esigin altina inince tus (Flasks sekmesi); kendi is parcaciginda, oyun on plandayken.
+    private AutoKeys? autoKeys;
     private string lastState = "";
     private DateTime nextStateLog = DateTime.MinValue;
 
@@ -115,6 +117,7 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.timer.Interval = 250;
         this.timer.Tick += (_, _) => this.Tick();
         this.timer.Start();
+        this.autoKeys = new AutoKeys(this.settings, () => Volatile.Read(ref this.gamePid));
         this.OpenSettingsFromArgs();
     }
 
@@ -122,6 +125,7 @@ internal sealed partial class OverlayContext : ApplicationContext
     {
         this.overlay.SetStyle(true, this.settings.LineColor, this.settings.Thickness);
         this.overlay.SetMonsterStyle(this.settings.MonsterVisible, this.settings.MonsterSize);
+        this.overlay.SetLegionStyle(this.settings.LegionMarker, this.settings.LegionSize);
         this.overlay.SetMapIcons(
             this.settings.IconSizes,
             this.iconCatalog is { HasImages: true } catalog ? catalog.Sprite : null,
@@ -133,6 +137,7 @@ internal sealed partial class OverlayContext : ApplicationContext
         this.overlay.SetHiddenPaths(this.settings.HiddenPaths);
         this.overlay.SetWildwood(this.settings.Wildwood);
         this.overlay.SetDjinnCaches(this.settings.DjinnCaches);
+        this.overlay.SetAbyssalWasting(this.settings.AbyssalWasting);
         this.overlay.ShowPlayerMarker = this.settings.PlayerMarker;
         using (var uniqueFont = this.settings.CreateUniqueFont())
         {
@@ -239,6 +244,7 @@ internal sealed partial class OverlayContext : ApplicationContext
 
         this.exiting = true;
         this.timer.Stop();
+        this.autoKeys?.Dispose();
 
         // Kapatirken paneli kendimiz kapatiyoruz ki ayarlar diske yazilsin: mesaj
         // dongusu bitince FormClosed artik calismiyor.

@@ -98,9 +98,12 @@ internal sealed partial class OverlayForm
         {
             this.lastStep = Environment.TickCount64;
             this.stats.Tick(this.Visible);
+            if (this.Visible) { this.profile.Begin(); }
             this.ReadLive();
+            this.profile.Mark("okuma");
             this.TrackGameWindow();
             this.FollowGameFocus();
+            this.profile.Mark("pencere");
 
             // Okuma ile cizim ayni adimda: Invalidate sonra mesaj dongusune birakmak okuma ile cizim arasinda bir ya da
             // iki kare bekletiyordu.
@@ -108,11 +111,14 @@ internal sealed partial class OverlayForm
             {
                 this.Invalidate();
                 this.Update();
+                this.profile.Mark("ekrana basma");
             }
+            this.profile.End();
 
             // "Bazen titriyor" tanisi: sadece bir sey olduysa, bes saniyede bir satir; ayrica seyrek bir hiz ozeti.
             if (this.stats.Flush() is { } line) { CrashLog.Write(line, null); }
             if (this.stats.Summary() is { } summary) { CrashLog.Write(summary, null); }
+            this.FlushPaintProfile();
 
             this.idle = !this.Visible;
         }

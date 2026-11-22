@@ -84,9 +84,23 @@ internal sealed class AltarPanel : Panel
             apply();
         };
 
+        // Abyssal Wasting zemini ve Wasting Well canavari (OverlayForm.Wasting.cs), mor.
+        var wasting = new CheckBox
+        {
+            AutoSize = true,
+            Location = new Point(12, 352),
+            Text = "Abyssal Wasting: ground (purple disc) and Wasting Well monsters (purple ring)",
+            Checked = settings.AbyssalWasting,
+        };
+        wasting.CheckedChanged += (_, _) =>
+        {
+            settings.AbyssalWasting = wasting.Checked;
+            apply();
+        };
+
         var hint = new Label
         {
-            Location = new Point(12, 358),
+            Location = new Point(12, 384),
             Size = new Size(456, 150),
             ForeColor = SystemColors.GrayText,
             Text = "A choice is framed when its text contains the line, whoever gains it (Player, Map boss, " +
@@ -96,7 +110,7 @@ internal sealed class AltarPanel : Panel
                    "Upper / lower case does not matter. A short part like \"Divine Orb\" is enough.",
         };
 
-        this.Controls.AddRange(new Control[] { player, playerColor, label, textColor, phrases, wildwood, caches, hint });
+        this.Controls.AddRange(new Control[] { player, playerColor, label, textColor, phrases, wildwood, caches, wasting, hint });
     }
 
     /// <summary>Rengi gosteren ve tiklaninca renk penceresini acan dugme (ColorPick).</summary>
