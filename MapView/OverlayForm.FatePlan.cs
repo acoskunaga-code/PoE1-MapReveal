@@ -138,7 +138,8 @@ internal sealed partial class OverlayForm
             g.SmoothingMode = SmoothingMode.None;
         }
 
-        if (rects.Count == 0) { return; }
+        // Odul yazilari kapaliyken yalniz numaralar ve cerceveler, "Best" kutusu yok (22.11.2026, bkz. PaintFateDraft).
+        if (rects.Count == 0 || !this.fateEnabled) { return; }
 
         var title = "Best: " + string.Join("  ", plan.Order.Select((c, i) => $"{i + 1} {c.Name}"));
         var gains = "-> " + FatePlanner.Describe(plan);

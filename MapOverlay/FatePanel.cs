@@ -14,7 +14,7 @@ internal sealed class FatePanel : Panel
         {
             AutoSize = true,
             Location = new Point(12, 14),
-            Text = "Show Fate rewards above the cards",
+            Text = "Show reward info (above the cards and next to the suggestion)",
             Checked = settings.FateRewards,
         };
         show.CheckedChanged += (_, _) =>

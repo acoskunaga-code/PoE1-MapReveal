@@ -115,6 +115,10 @@ internal sealed partial class OverlayForm
 
         g.SmoothingMode = SmoothingMode.None;
 
+        // Odul bilgisi kutusu odul yazilariyla ayni ayara bagli (22.11.2026, kullanici: "fate kart ekranindaki odul
+        // bilgilerini kapatsana"): kapaliyken yalniz TAKE etiketi ve cerceve.
+        if (!this.fateEnabled) { return; }
+
         var title = "Take: " + pick.Name;
         var later = "Invoke later: " + string.Join("  ", plan.Order.Select((c, i) => $"{i + 1} {c.Name}"));
         var gains = "-> " + FatePlanner.Describe(plan);
