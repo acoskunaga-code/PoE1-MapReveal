@@ -3,18 +3,15 @@ using System.Drawing.Text;
 namespace Poe2Map;
 
 /// <summary>
-///     Fate secim paneli: her kartin ustune, kartin altindaki yuvarlak simgelerin yazilari (FateLabels) yaziliyor;
-///     panel acildigi anda, fareyle uzerine gelmeden. Buyuk harita kapaliyken de ciziliyor.
+///     Fate secim paneli: kartlarin odulleri okunur (FateLabels) ama ekrana YAZILMAZ. 22.11.2026, kullanici: "fate
+///     ekranindaki yazilar istege bagli degil kalici olarak kapattin degilmi". Cizilenler: TAKE, COPY, tiklama
+///     numaralari, kampanya bossu ve degerli odul etiketleri, aranan yazi gecen kartin cercevesi.
 ///
 ///     Panel arayuzde surekli duruyor (kapaliyken gizli); bir kez bulunup yolu kaydediliyor, sonra her taramada sadece
 ///     gorunur mu diye bakiliyor. Kapaliyken maliyeti birkac okuma.
 /// </summary>
 internal sealed partial class OverlayForm
 {
-    private static readonly SolidBrush FateBack = new(Color.FromArgb(255, 16, 12, 8));
-    private static readonly SolidBrush FateText = new(Color.FromArgb(240, 228, 200));
-    private static readonly Pen FateEdge = new(Color.FromArgb(200, 160, 90), 1f);
-
     private ulong fatePanel;
     private ulong fatePanelRoot;
     private int[]? fatePath;
@@ -25,35 +22,22 @@ internal sealed partial class OverlayForm
     private FateLabels.Card[] fateCards = Array.Empty<FateLabels.Card>();
     private Font? fateFont;
 
-    // Panelin Confirm butonu (FateLabels.Buttons) ve bu karedeki ekran kutusu: odul, TAKE ve Best kutulari ona binmiyor.
-    private ulong[] fateButtons = Array.Empty<ulong>();
-    private List<RectangleF> fateButtonRects = new();
-
-    // Ayar penceresinin Fates sekmesi: yazilar acik mi, hangi yazilar gecen odul renkli + kutusu cerceveli, hangi renkle.
-    // Firca ve kalem butun olarak degistiriliyor, eskisi Dispose edilmiyor (o anda cizimde olabilir).
-    private bool fateEnabled = true;
+    // Ayar penceresinin Fates sekmesi: odulunde bu yazilardan biri gecen kart bu renkte cercevelenir. Kalem butun
+    // olarak degistiriliyor, eskisi Dispose edilmiyor (o anda cizimde olabilir).
     private string[] fatePhrases = Array.Empty<string>();
-    private SolidBrush fateMatchText = new(Color.FromArgb(255, 200, 40));
     private Pen fateMatchFrame = new(Color.FromArgb(255, 200, 40), 3f);
 
     /// <summary>
     ///     Fate ayarlari. Yazilar odullerle ayni bicime getiriliyor: oyunun etiketleri atiliyor, "Empowered Monster"
     ///     "Monster" oluyor (FateLabels.Clean), sayilar "#" (AltarLabels.Normalize); 3 harften kisa kalanlar atiliyor.
     /// </summary>
-    internal void SetFateLabels(bool enabled, IEnumerable<string> phrases, Color color)
+    internal void SetFateFrames(IEnumerable<string> phrases, Color color)
     {
-        this.fateEnabled = enabled;
         this.fatePhrases = phrases.Select(p => AltarLabels.Normalize(FateLabels.Clean(p)))
             .Where(p => p.Length >= 3).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
 
         var key = KeepOffKey(color);
-        if (this.fateMatchText.Color.ToArgb() != key.ToArgb())
-        {
-            this.fateMatchText = new SolidBrush(key);
-            this.fateMatchFrame = new Pen(key, 3f);
-        }
-
-        if (!enabled && !this.fatePlanEnabled) { this.fateCards = Array.Empty<FateLabels.Card>(); }
+        if (this.fateMatchFrame.Color.ToArgb() != key.ToArgb()) { this.fateMatchFrame = new Pen(key, 3f); }
     }
 
     /// <summary>Odulde aranan yazilardan biri geciyor mu.</summary>
@@ -69,8 +53,8 @@ internal sealed partial class OverlayForm
     /// <summary>Arka plan, saniyede dort kez (RefreshAltars ile ayni yerden): acik kartlarin yazilari.</summary>
     private void RefreshFates(IntPtr h)
     {
-        // Odul yazilari kapali olsa da en iyi secim onerisi (OverlayForm.FatePlan.cs) acikken kartlar okunuyor.
-        if ((!this.fateEnabled && !this.fatePlanEnabled) || h == IntPtr.Zero || this.MapElement == 0)
+        // Oneri kapali olsa da okunuyor: kampanya bossu, degerli odul ve aranan yazi isaretleri kartlardan geliyor.
+        if (h == IntPtr.Zero || this.MapElement == 0)
         {
             this.fateCards = Array.Empty<FateLabels.Card>();
             return;
@@ -89,7 +73,6 @@ internal sealed partial class OverlayForm
         {
             if (FateLabels.Scan(h, this.fatePanel) is { } cards)
             {
-                this.fateButtons = cards.Count > 0 ? FateLabels.Buttons(h, this.fatePanel).ToArray() : Array.Empty<ulong>();
                 this.fateCards = cards.ToArray();
                 this.UpdateFatePlan(h, cards);
                 return;
@@ -170,11 +153,7 @@ internal sealed partial class OverlayForm
         });
     }
 
-    /// <summary>
-    ///     Her karede: her acik kartin ustune bir kutu icinde odul yazilari. Kutu genisligi kart genisligi ile kartlar
-    ///     arasi adimin kucugu: govde ogesi gorunen karttan genis (1920x1017'de ~212 px, kartlar arasi adim kadar), kutular
-    ///     yan yana oturuyor ama birbirine binmiyor. Kutu asagidan karta dayaniyor, yukari dogru uzuyor.
-    /// </summary>
+    /// <summary>Her karede: kartlarin ustundeki isaretler; hepsi kartin kendi kutusunda, disari yazi yok.</summary>
     private void PaintFates(PaintEventArgs e)
     {
         var cards = this.fateCards;
@@ -189,8 +168,7 @@ internal sealed partial class OverlayForm
             font = this.fateFont = new Font("Segoe UI", size, FontStyle.Regular);
         }
 
-        // Fare bir kartin ustundeyken oyun o kartin kendi aciklamasini ayni yere, kartin ustune aciyor (14.11.2026: kutumuz
-        // onu kapatiyordu). O kartin kutusu o sirada cizilmiyor.
+        // Fare bir kartin ustundeyken oyunun kart aciklamasi butun kartlarin ustune aciliyor (14.11.2026): o sirada hicbir sey yok.
         var mouse = GetCursorPos(out var screenMouse) ? this.PointToClient(screenMouse) : new Point(-1, -1);
 
         var placed = new List<(FateLabels.Card Card, RectangleF Rect, bool Hovered)>(cards.Length);
@@ -200,57 +178,10 @@ internal sealed partial class OverlayForm
             if (rect.Width >= 20) { placed.Add((card, rect, rect.Contains(mouse))); }
         }
 
-        // Fare bir kartin ustundeyken oyunun kart aciklamasi ekranin ust kismina, butun kartlarin uzerine genis aciliyor
-        // (14.11.2026 goruntusu: "Rotted" aciklamasi diger iki kartin kutularinin altinda kaldi). O sirada hic kutu yok.
         if (placed.Count == 0 || placed.Any(p => p.Hovered)) { return; }
 
         e.Graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-        var cardRects = placed.Select(p => p.Rect).ToList();
-
-        // Confirm butonu dolu kutu gibi sayiliyor (16.11.2026: eldeki kartin ustune konan odul kutusu butonu kapatiyordu).
-        this.fateButtonRects = this.fateButtons
-            .Select(b => UiFinder.Reread(h, b) is { Visible: true } ? PartsRect(h, new[] { b }, width, height) : null)
-            .OfType<RectangleF>()
-            .Select(r => RectangleF.Inflate(r, 6, 6))
-            .ToList();
-        var boxes = new List<RectangleF>(this.fateButtonRects);
-        foreach (var (card, rect, hovered) in placed)
-        {
-            if (hovered || !this.fateEnabled) { continue; }
-
-            // Kutu genisligi AYNI SIRADAKI kartlara gore (ust uste iki sira kart olabiliyor: secim kartlari ve alttaki
-            // toplanmis Fate'ler); butun kartlara gore olcunce iki siranin yakin merkezleri kutuyu daraltiyordu.
-            var boxWidth = RowPitch(placed.Select(p => p.Rect), rect);
-
-            // Her odul ayri olculup ayri fircayla yaziliyor (aranan yazi gecen odul ayar rengiyle); oduller arasi bosluk.
-            var lines = card.Rewards
-                .Select(r => (Text: "• " + r.Replace("\n", "\n   "), Match: this.FateMatches(r)))
-                .Select(l => (l.Text, l.Match, Height: e.Graphics.MeasureString(l.Text, font, (int)(boxWidth - 10)).Height))
-                .ToList();
-            var textHeight = lines.Sum(l => l.Height) + (Math.Max(0, lines.Count - 1) * RewardGap);
-            var box = this.PlaceFateBox(rect, boxWidth, textHeight + 10, cardRects, boxes, height);
-            boxes.Add(box);
-
-            e.Graphics.FillRectangle(FateBack, box);
-            e.Graphics.DrawRectangle(FateEdge, box.X, box.Y, box.Width, box.Height);
-
-            var top = box.Y + 5;
-            foreach (var (text, match, lineHeight) in lines)
-            {
-                e.Graphics.DrawString(text, font, match ? this.fateMatchText : FateText, new RectangleF(box.X + 5, top, box.Width - 10, lineHeight + 2));
-                top += lineHeight + RewardGap;
-            }
-
-            // Aranan yazilardan biri gecen kartin kutusu kalin cerceve (altarlardaki gibi), disinda ince koyu kenar.
-            if (lines.Any(l => l.Match))
-            {
-                var frame = box;
-                frame.Inflate(2, 2);
-                e.Graphics.DrawRectangle(this.fateMatchFrame, frame.X, frame.Y, frame.Width, frame.Height);
-                frame.Inflate(2.5f, 2.5f);
-                e.Graphics.DrawRectangle(AltarFrameEdge, frame.X, frame.Y, frame.Width, frame.Height);
-            }
-        }
+        this.PaintFateMatches(e.Graphics, placed);
 
         // Ek kampanya bossu cikaran kartlar (OverlayForm.FateBoss.cs); numaralar onlarin ustune.
         PaintBossFates(e.Graphics, placed, font);
@@ -258,23 +189,22 @@ internal sealed partial class OverlayForm
         // 3.30.0c'nin yeni degerli odulleri (OverlayForm.FateChase.cs): Divine, Mirror Shard, Fracturing Orb, Hinekora.
         PaintChaseFates(e.Graphics, placed, font);
 
-        // En iyi secim: numaralar ve "Best" kutusu, odul kutularinin yerleri belli olduktan sonra (onlara binmesin).
-        this.PaintFatePlan(e.Graphics, placed, boxes, font, height);
+        // En iyi secim: TAKE, COPY ve numaralar.
+        this.PaintFatePlan(e.Graphics, placed, height);
     }
 
-    private const float RewardGap = 4f;
-
-    /// <summary>
-    ///     Kartin sirasindaki (ust kenari 30 px icinde) kartlarla: kart genisligi ile en yakin iki merkez arasinin kucugu,
-    ///     8 px bosluk birakarak; en az 100 px.
-    /// </summary>
-    private static float RowPitch(IEnumerable<RectangleF> cards, RectangleF card)
+    /// <summary>Odulunde aranan yazilardan biri gecen kart: TAKE ve COPY cercevelerinin disinda, ayar renginde cerceve.</summary>
+    private void PaintFateMatches(Graphics g, List<(FateLabels.Card Card, RectangleF Rect, bool Hovered)> placed)
     {
-        var row = cards.Where(c => Math.Abs(c.Y - card.Y) < 30).Select(c => c.X + (c.Width / 2f)).OrderBy(x => x).ToList();
-        var pitch = card.Width;
-        for (var i = 1; i < row.Count; i++) { pitch = Math.Min(pitch, row[i] - row[i - 1]); }
+        foreach (var (card, rect, _) in placed)
+        {
+            if (!card.Rewards.Any(this.FateMatches)) { continue; }
 
-        return Math.Max(pitch - 8f, 100f);
+            var frame = RectangleF.Inflate(rect, 13, 13);
+            g.DrawRectangle(this.fateMatchFrame, frame.X, frame.Y, frame.Width, frame.Height);
+            frame.Inflate(2.5f, 2.5f);
+            g.DrawRectangle(AltarFrameEdge, frame.X, frame.Y, frame.Width, frame.Height);
+        }
     }
 
     /// <summary>Kartin ekrandaki tam kutusu: govde, ad seridi ve odul simgeleri ogelerinin birlesimi (FateLabels.Card.Parts).</summary>
@@ -297,40 +227,4 @@ internal sealed partial class OverlayForm
 
         return all;
     }
-
-    /// <summary>
-    ///     Kutunun yeri, sirayla ilk uyan: kartin ustu, alti, sagi, solu. "Uyan" = baska bir karta ya da daha once konan bir
-    ///     kutuya binmiyor ve ekranin icinde. 14.11.2026: dort kartli panelde alttaki kartin ustu ortadaki kartin
-    ///     simgelerine biniyordu, alti ekrandan tasiyordu; yanlari bostu. Hicbiri uymazsa ust, ekranin ustune sigdirilarak.
-    /// </summary>
-    private RectangleF PlaceFateBox(RectangleF card, float boxWidth, float boxHeight, List<RectangleF> cards, List<RectangleF> boxes, int screenHeight)
-    {
-        var x = card.X + (card.Width / 2f) - (boxWidth / 2f);
-        var screen = new RectangleF(0, 0, this.ClientSize.Width, screenHeight);
-        var options = new[]
-        {
-            new RectangleF(x, card.Y - boxHeight - 4, boxWidth, boxHeight),
-            new RectangleF(x, card.Bottom + 4, boxWidth, boxHeight),
-            new RectangleF(card.Right + 4, card.Y, boxWidth, boxHeight),
-            new RectangleF(card.X - boxWidth - 4, card.Y, boxWidth, boxHeight),
-        };
-
-        foreach (var option in options)
-        {
-            if (screen.Contains(option) && !Collides(option, card, cards, boxes)) { return option; }
-        }
-
-        // Hicbiri bos degilse once butona binmeyen ilk yer (baska bir karta binse de): buton tiklanabilir kalsin.
-        foreach (var option in options)
-        {
-            if (screen.Contains(option) && !this.fateButtonRects.Any(b => b.IntersectsWith(option))) { return option; }
-        }
-
-        var above = options[0];
-        if (above.Top < 0) { above.Y = 0; }
-        return above;
-    }
-
-    private static bool Collides(RectangleF box, RectangleF own, List<RectangleF> cards, List<RectangleF> boxes) =>
-        cards.Any(c => c != own && c.IntersectsWith(box)) || boxes.Any(b => b.IntersectsWith(box));
 }

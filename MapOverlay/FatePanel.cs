@@ -1,44 +1,30 @@
 namespace Poe2Map;
 
 /// <summary>
-///     Ayar penceresinin "Fates" sekmesi: Fate panelinde kartlarin ustune odul yazilari yazilsin mi, hangi yazilar gecen
-///     odul renkli yazilip kartin kutusu cercevelensin (altarlardaki gibi, her satira bir yazi), ve Invoke Fates panelinde
-///     en iyi secim onerisi ile odul degerleri (FateValues). Degisiklik aninda uygulaniyor, pencere kapaninca diske
-///     yaziliyor.
+///     Ayar penceresinin "Fates" sekmesi: odulunde hangi yazilar gecen kart cercevelensin (altarlardaki gibi, her satira
+///     bir yazi), en iyi secim onerisi ve odul degerleri (FateValues). Degisiklik aninda uygulaniyor, pencere kapaninca
+///     diske yaziliyor.
 /// </summary>
 internal sealed class FatePanel : Panel
 {
     internal FatePanel(OverlaySettings settings, Action apply)
     {
-        var show = new CheckBox
-        {
-            AutoSize = true,
-            Location = new Point(12, 14),
-            Text = "Show reward info (above the cards and next to the suggestion)",
-            Checked = settings.FateRewards,
-        };
-        show.CheckedChanged += (_, _) =>
-        {
-            settings.FateRewards = show.Checked;
-            apply();
-        };
-
         var label = new Label
         {
             AutoSize = true,
-            Location = new Point(12, 46),
+            Location = new Point(12, 18),
             Text = "Frame cards whose rewards contain any of these, one per line:",
         };
 
-        var color = ColorPick.Button(this, new Point(360, 40), () => settings.FateTextColor, c => settings.FateTextColor = c, apply);
+        var color = ColorPick.Button(this, new Point(360, 12), () => settings.FateTextColor, c => settings.FateTextColor = c, apply);
 
-        var phrases = Lines(new Point(12, 70), 100, settings.FatePhrases, l => settings.FatePhrases = l, apply);
+        var phrases = Lines(new Point(12, 42), 100, settings.FatePhrases, l => settings.FatePhrases = l, apply);
 
         // Invoke Fates: en iyi kartlar ve tiklama sirasi (OverlayForm.FatePlan.cs), degerler asagidaki listeden.
         var plan = new CheckBox
         {
             AutoSize = true,
-            Location = new Point(12, 184),
+            Location = new Point(12, 156),
             Text = "Suggest cards: TAKE on Select a Fate, click order on Invoke Fates",
             Checked = settings.FatePlan,
         };
@@ -51,17 +37,17 @@ internal sealed class FatePanel : Panel
         var valueLabel = new Label
         {
             AutoSize = true,
-            Location = new Point(12, 212),
+            Location = new Point(12, 184),
             Text = "Reward value in chaos for the suggestion, one per line:",
         };
 
-        var valueBox = Lines(new Point(12, 236), 150, settings.FateValueLines, l => settings.FateValueLines = l, apply);
-        var reset = new Button { Text = "Defaults", Location = new Point(388, 206), Size = new Size(80, 26) };
+        var valueBox = Lines(new Point(12, 208), 150, settings.FateValueLines, l => settings.FateValueLines = l, apply);
+        var reset = new Button { Text = "Defaults", Location = new Point(388, 178), Size = new Size(80, 26) };
         reset.Click += (_, _) => valueBox.Lines = FateValues.Defaults.ToArray();
 
         var hint = new Label
         {
-            Location = new Point(12, 394),
+            Location = new Point(12, 366),
             Size = new Size(456, 120),
             ForeColor = SystemColors.GrayText,
             Text = "A reward is worth the first line it contains; [2] or [3] limits a line to rewards that need that " +
@@ -71,7 +57,7 @@ internal sealed class FatePanel : Panel
                    "cards, so different cards can complete it together.",
         };
 
-        this.Controls.AddRange(new Control[] { show, label, color, phrases, plan, valueLabel, valueBox, reset, hint });
+        this.Controls.AddRange(new Control[] { label, color, phrases, plan, valueLabel, valueBox, reset, hint });
     }
 
     /// <summary>Her satira bir yazi alan cok satirli kutu; degisince bos satirlar atilip ayara yaziliyor.</summary>

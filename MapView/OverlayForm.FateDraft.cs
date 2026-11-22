@@ -4,7 +4,7 @@ namespace Poe2Map;
 
 /// <summary>
 ///     "Select a Fate" paneli: her kazanda teklif edilen kartlardan hangisinin alinacagi (FatePlanner.Draft). Onerilen kartin
-///     ortasinda yesil "TAKE" etiketi ve cerceve, yaninda "Take: X / Invoke later: 1 A 2 X / -> kazanc" kutusu.
+///     ortasinda yesil "TAKE" etiketi ve cerceve; yazi kutusu yok.
 ///
 ///     Panel (16.11.2026 canli, `MapScan fates`): ilk secimden once yalniz teklif (grup 0, 3 kart); secimden sonra ayni
 ///     panelde yeni teklif (grup 0, 4 kart) ve altinda el (grup 1). Invoke Fates basligi yok (FateLabels.IsInvoke false).
@@ -84,8 +84,8 @@ internal sealed partial class OverlayForm
         return font;
     }
 
-    private void PaintFateDraft(Graphics g, FateLabels.Card pick, FatePlanner.Plan plan,
-        List<(FateLabels.Card Card, RectangleF Rect, bool Hovered)> placed, List<RectangleF> boxes, Font font, int screenHeight)
+    private void PaintFateDraft(Graphics g, FateLabels.Card pick,
+        List<(FateLabels.Card Card, RectangleF Rect, bool Hovered)> placed, int screenHeight)
     {
         var index = placed.FindIndex(p => p.Card.Body == pick.Body);
         if (index < 0) { return; }
@@ -114,26 +114,6 @@ internal sealed partial class OverlayForm
         }
 
         g.SmoothingMode = SmoothingMode.None;
-
-        // Odul bilgisi kutusu odul yazilariyla ayni ayara bagli (22.11.2026, kullanici: "fate kart ekranindaki odul
-        // bilgilerini kapatsana"): kapaliyken yalniz TAKE etiketi ve cerceve.
-        if (!this.fateEnabled) { return; }
-
-        var title = "Take: " + pick.Name;
-        var later = "Invoke later: " + string.Join("  ", plan.Order.Select((c, i) => $"{i + 1} {c.Name}"));
-        var gains = "-> " + FatePlanner.Describe(plan);
-        var width = new[] { title, later, gains }.Max(t => g.MeasureString(t, font).Width) + 14;
-        width = Math.Min(width, this.ClientSize.Width - 8);
-        var line = font.GetHeight(g);
-        var gainsHeight = g.MeasureString(gains, font, (int)(width - 10)).Height;
-        var height = (2 * line) + gainsHeight + 16;
-
-        var box = this.PlacePlanBox(new List<RectangleF> { rect }, placed.Select(p => p.Rect).ToList(), boxes, width, height, screenHeight);
-        g.FillRectangle(FateBack, box);
-        g.DrawRectangle(PlanFrame, box.X, box.Y, box.Width, box.Height);
-        g.DrawString(title, font, PlanTitle, box.X + 5, box.Y + 5);
-        g.DrawString(later, font, FateText, box.X + 5, box.Y + 6 + line);
-        g.DrawString(gains, font, FateText, new RectangleF(box.X + 5, box.Y + 7 + (2 * line), box.Width - 10, gainsHeight + 2));
     }
 
     private static GraphicsPath Pill(RectangleF r)

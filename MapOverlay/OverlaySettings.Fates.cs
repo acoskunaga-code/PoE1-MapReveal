@@ -3,21 +3,17 @@ namespace Poe2Map;
 /// <summary>
 ///     Fate ayarlari (ayar penceresindeki "Fates" sekmesi):
 ///
-///         fate-labels     = acik / kapali          Fate panelinde kartlarin ustune odul yazilari
-///         fate-text       = Divine | Unique         bu yazilardan biri gecen odul o renkte yaziliyor ve kartin kutusu
-///                                                  o renkte cerceveleniyor; "|" ile ayrilmis, bos = hicbiri
+///         fate-text       = Divine | Unique         odulunde bu yazilardan biri gecen kart o renkte cerceveleniyor;
+///                                                  "|" ile ayrilmis, bos = hicbiri
 ///         fate-text-color = #RRGGBB                 o renk
 ///
-///     Satir hic yoksa varsayilan: yazilar acik, aranan yazi yok, renk altin.
+///     Satir hic yoksa varsayilan: aranan yazi yok, renk altin. Eski "fate-labels" (odul yazilari) okunmuyor: yazilar
+///     22.11.2026'da kalici olarak kaldirildi.
 /// </summary>
 internal sealed partial class OverlaySettings
 {
-    private const string FateRewardsKey = "fate-labels";
     private const string FateTextKey = "fate-text";
     private const string FateTextColorKey = "fate-text-color";
-
-    /// <summary>Fate panelinde kartlarin ustune odul yazilari yazilsin mi.</summary>
-    internal bool FateRewards { get; set; } = true;
 
     /// <summary>Cerceve icin aranan yazilar; buyuk/kucuk harf ve sayilar onemsiz (AltarLabels.Normalize).</summary>
     internal List<string> FatePhrases { get; set; } = new();
@@ -45,9 +41,6 @@ internal sealed partial class OverlaySettings
             case FateValuesKey when !value.Equals(FateValuesDefault, StringComparison.OrdinalIgnoreCase):
                 settings.FateValueLines = ReadAltarPhrases(value);
                 break;
-            case FateRewardsKey:
-                settings.FateRewards = !value.Equals("kapali", StringComparison.OrdinalIgnoreCase);
-                break;
             case FateTextKey:
                 settings.FatePhrases = ReadAltarPhrases(value);
                 break;
@@ -60,8 +53,7 @@ internal sealed partial class OverlaySettings
     private void WriteFateLines(List<string> lines)
     {
         lines.Add("");
-        lines.Add("# Fate paneli (ayar penceresi, Fates sekmesi): kartlarin ustunde odul yazilari; yazilardan biri gecen odul renkli");
-        lines.Add($"{FateRewardsKey} = {(this.FateRewards ? "acik" : "kapali")}");
+        lines.Add("# Fate paneli (ayar penceresi, Fates sekmesi): odulunde yazilardan biri gecen kart renkli cerceveli");
         lines.Add($"{FateTextColorKey} = {ColorText(this.FateTextColor)}");
 
         var phrases = this.FatePhrases.Select(p => p.Replace(AltarTextSeparator, ' ').Trim()).Where(p => p.Length > 0);
